@@ -33,8 +33,10 @@ struct DriverServer {
 
         // Actions
         await server.appendRoute(HTTPRoute("tap"), to: TapHandler())
+        await server.appendRoute(HTTPRoute("doubleTap"), to: DoubleTapHandler())
         await server.appendRoute(HTTPRoute("swipe"), to: SwipeHandler())
         await server.appendRoute(HTTPRoute("typeText"), to: TypeTextHandler())
+        await server.appendRoute(HTTPRoute("eraseText"), to: EraseTextHandler())
 
         // View hierarchy
         await server.appendRoute(HTTPRoute("viewHierarchy"), to: ViewHierarchyHandler())

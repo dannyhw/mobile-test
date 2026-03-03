@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
-export default function Index() {
+export default function Counter() {
   const [count, setCount] = useState(0);
 
   return (

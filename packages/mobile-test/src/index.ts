@@ -5,7 +5,7 @@ export { by } from './element/by.js'
 export { defineConfig } from './config.js'
 export { mobileTestPlugin } from './vitest/plugin.js'
 
-export type { Device, DeviceInfo } from './device/types.js'
+export type { Device, DeviceInfo, WaitForAnimationOptions } from './device/types.js'
 export type { MobileTestConfig, ResolvedConfig } from './config.js'
 export type { Locator } from './element/by.js'
 export type { Element } from './element/element.js'

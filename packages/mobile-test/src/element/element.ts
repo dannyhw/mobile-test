@@ -1,14 +1,25 @@
 import type { Locator } from './by.js'
 import type { ElementHandle } from './types.js'
 import { toFrame, frameCenter } from './types.js'
-import { findElement } from './match.js'
+import { findElement, findAllElements } from './match.js'
 import { getDriverClient, getActiveBundleId } from '../driver/context.js'
 import { getActionTimeout } from '../config-context.js'
 
 const POLL_INTERVAL = 200
 
 export class Element {
+  private index?: number
+
   constructor(public readonly locator: Locator) {}
+
+  /**
+   * Select the nth matching element (0-indexed).
+   */
+  atIndex(index: number): Element {
+    const el = new Element(this.locator)
+    el.index = index
+    return el
+  }
 
   /**
    * Resolve the element from the view hierarchy with auto-wait.
@@ -21,7 +32,13 @@ export class Element {
 
     while (true) {
       const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
-      const found = findElement(hierarchy, this.locator)
+      let found: ElementHandle | null
+      if (this.index !== undefined) {
+        const all = findAllElements(hierarchy, this.locator, this.index + 1)
+        found = all.length > this.index ? all[this.index] : null
+      } else {
+        found = findElement(hierarchy, this.locator)
+      }
       if (found) return found
 
       if (Date.now() - start >= timeout) {
@@ -44,6 +61,10 @@ export class Element {
     const client = getDriverClient()
     const bundleId = getActiveBundleId()
     const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+    if (this.index !== undefined) {
+      const all = findAllElements(hierarchy, this.locator, this.index + 1)
+      return all.length > this.index ? all[this.index] : null
+    }
     return findElement(hierarchy, this.locator)
   }
 
@@ -53,10 +74,33 @@ export class Element {
     await getDriverClient().tap(center.x, center.y)
   }
 
+  async doubleTap(): Promise<void> {
+    const el = await this.resolve()
+    const center = frameCenter(toFrame(el.frame))
+    await getDriverClient().doubleTap(center.x, center.y)
+  }
+
   async type(text: string): Promise<void> {
     // Tap to focus, then type
     await this.tap()
     await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
+    await getDriverClient().typeText(text)
+  }
+
+  async replaceText(text: string): Promise<void> {
+    // Tap to focus, erase existing text, then type replacement
+    const el = await this.resolve()
+    const center = frameCenter(toFrame(el.frame))
+    await getDriverClient().tap(center.x, center.y)
+    await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
+
+    // Erase existing text by sending delete keys
+    const currentValue = el.value ?? ''
+    if (currentValue.length > 0) {
+      await getDriverClient().eraseText(currentValue.length)
+      await new Promise(r => setTimeout(r, 200))
+    }
+
     await getDriverClient().typeText(text)
   }
 
@@ -71,6 +115,19 @@ export class Element {
       'element.clear() is not yet implemented.\n\n' +
       'Workaround: select the text manually and delete it, or use element.type() to overwrite.'
     )
+  }
+
+  /**
+   * Scroll the current element until the target element becomes visible.
+   */
+  async scrollTo(target: Element, direction: 'up' | 'down' | 'left' | 'right' = 'down', maxScrolls = 10): Promise<void> {
+    for (let i = 0; i < maxScrolls; i++) {
+      const found = await target.tryResolve()
+      if (found) return
+      await this.swipe(direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right')
+      await new Promise(r => setTimeout(r, 300))
+    }
+    throw new Error(`Could not find ${target.locator} after scrolling ${maxScrolls} times`)
   }
 
   async swipe(direction: 'up' | 'down' | 'left' | 'right', distance = 200): Promise<void> {

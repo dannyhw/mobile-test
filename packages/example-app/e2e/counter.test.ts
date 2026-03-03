@@ -5,8 +5,7 @@ describe("Counter App", () => {
   it("shows the initial screen", async () => {
     await device.launch("com.dannyhw.exampleapp");
 
-    // TODO figure this out???
-    await new Promise((resolve) => setTimeout(resolve, 500)); // Wait for the app to stabilize
+    await device.waitForAnimationToEnd();
 
     // Verify the button and counter are visible
     await expect(element(by.id("click-button"))).toBeVisible();

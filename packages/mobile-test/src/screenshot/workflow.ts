@@ -1,11 +1,15 @@
 import type { DeviceInfo } from '../device/types.js'
 import type { CompareOptions, ComparisonResult } from './compare.js'
+import type { Element } from '../element/element.js'
+import { toFrame } from '../element/types.js'
 import { getDriverClient } from '../driver/context.js'
 import { saveLatest, baselineExists, saveBaseline, updateBaseline, ensureDiffDir, resolveBaselinePath } from './baselines.js'
 import { compareScreenshots } from './compare.js'
 
 export interface TakeAndCompareOptions extends CompareOptions {
   screenshotsDir?: string
+  mask?: Element[]
+  cropElement?: Element
 }
 
 export interface ScreenshotResult {
@@ -27,14 +31,43 @@ export async function takeAndCompare(
   const client = getDriverClient()
   const screenshotsDir = options?.screenshotsDir
 
-  // 1. Take screenshot via driver
-  const buffer = await client.screenshot()
+  // 1. Resolve mask elements to ignoreRegions
+  let ignoreRegions = options?.ignoreRegions
+  if (options?.mask && options.mask.length > 0) {
+    const deviceInfoResp = await client.deviceInfo()
+    const scale = deviceInfoResp.scale
+    const maskRegions = await Promise.all(
+      options.mask.map(async (el) => {
+        const handle = await el.resolve()
+        const frame = toFrame(handle.frame)
+        return {
+          x1: Math.round(frame.x * scale),
+          y1: Math.round(frame.y * scale),
+          x2: Math.round((frame.x + frame.width) * scale),
+          y2: Math.round((frame.y + frame.height) * scale),
+        }
+      })
+    )
+    ignoreRegions = [...(ignoreRegions ?? []), ...maskRegions]
+  }
 
-  // 2. Save to latest/
+  // 2. Take screenshot via driver
+  let buffer = await client.screenshot()
+
+  // 3. Crop to element bounds if requested
+  if (options?.cropElement) {
+    const { cropToFrame } = await import('./crop.js')
+    const deviceInfoResp = await client.deviceInfo()
+    const handle = await options.cropElement.resolve()
+    const frame = toFrame(handle.frame)
+    buffer = await cropToFrame(buffer, frame, deviceInfoResp.scale)
+  }
+
+  // 4. Save to latest/
   const latestPath = saveLatest(name, device, buffer, screenshotsDir)
   const baselinePath = resolveBaselinePath(name, device, screenshotsDir)
 
-  // 3. If UPDATE_SCREENSHOTS is set, update baseline and return pass
+  // 5. If UPDATE_SCREENSHOTS is set, update baseline and return pass
   if (process.env.UPDATE_SCREENSHOTS === 'true') {
     saveBaseline(name, device, buffer, screenshotsDir)
     return {
@@ -47,7 +80,7 @@ export async function takeAndCompare(
     }
   }
 
-  // 4. If no baseline exists, save as baseline and return pass
+  // 6. If no baseline exists, save as baseline and return pass
   if (!baselineExists(name, device, screenshotsDir)) {
     saveBaseline(name, device, buffer, screenshotsDir)
     return {
@@ -60,13 +93,13 @@ export async function takeAndCompare(
     }
   }
 
-  // 5. Compare against baseline
+  // 7. Compare against baseline
   const diffPath = ensureDiffDir(name, device, screenshotsDir)
   const comparison = await compareScreenshots(baselinePath, latestPath, diffPath, {
     threshold: options?.threshold,
     maxDiffPercentage: options?.maxDiffPercentage,
     antialiasing: options?.antialiasing,
-    ignoreRegions: options?.ignoreRegions,
+    ignoreRegions,
   })
 
   return {

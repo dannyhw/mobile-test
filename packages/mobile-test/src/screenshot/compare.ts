@@ -1,3 +1,6 @@
+import { writeFileSync, unlinkSync, mkdtempSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { compare } from 'odiff-bin'
 
 export interface ComparisonResult {
@@ -65,4 +68,35 @@ export async function compareScreenshots(
   }
 
   return { match: false, diffPercentage: 100, reason: 'Unknown comparison error' }
+}
+
+/**
+ * Compare two PNG buffers directly.
+ * Writes to temp files, runs odiff, cleans up.
+ * Returns the diff percentage (0 = identical).
+ */
+export async function compareBuffers(a: Buffer, b: Buffer, threshold = 0.1): Promise<number> {
+  const dir = mkdtempSync(join(tmpdir(), 'mobile-test-'))
+  const fileA = join(dir, 'a.png')
+  const fileB = join(dir, 'b.png')
+  const fileDiff = join(dir, 'diff.png')
+
+  try {
+    writeFileSync(fileA, a)
+    writeFileSync(fileB, b)
+
+    const result = await compare(fileA, fileB, fileDiff, {
+      threshold,
+      noFailOnFsErrors: true,
+    })
+
+    if (result.match) return 0
+    if (result.reason === 'pixel-diff') return result.diffPercentage
+    return 100
+  } finally {
+    try { unlinkSync(fileA) } catch {}
+    try { unlinkSync(fileB) } catch {}
+    try { unlinkSync(fileDiff) } catch {}
+    try { const { rmdirSync } = await import('node:fs'); rmdirSync(dir) } catch {}
+  }
 }

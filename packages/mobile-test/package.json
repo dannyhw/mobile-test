@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "execa": "^9.5.2",
-    "odiff-bin": "^3.1.1"
+    "odiff-bin": "^3.1.1",
+    "sharp": "^0.33.0"
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"

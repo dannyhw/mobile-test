@@ -8,5 +8,6 @@ export default defineConfig({
     include: ["e2e/**/*.test.ts"],
     testTimeout: 60_000,
     hookTimeout: 60_000,
+    fileParallelism: false,
   },
 });

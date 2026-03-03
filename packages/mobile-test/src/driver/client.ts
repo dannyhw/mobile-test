@@ -20,12 +20,20 @@ export class DriverClient {
     await this.post<TapRequest>('/tap', { x, y, duration })
   }
 
+  async doubleTap(x: number, y: number): Promise<void> {
+    await this.post<TapRequest>('/doubleTap', { x, y })
+  }
+
   async swipe(startX: number, startY: number, endX: number, endY: number, duration?: number): Promise<void> {
     await this.post<SwipeRequest>('/swipe', { startX, startY, endX, endY, duration })
   }
 
   async typeText(text: string): Promise<void> {
     await this.post<TypeTextRequest>('/typeText', { text })
+  }
+
+  async eraseText(charactersToErase: number): Promise<void> {
+    await this.post<{ charactersToErase: number }>('/eraseText', { charactersToErase })
   }
 
   async screenshot(): Promise<Buffer> {

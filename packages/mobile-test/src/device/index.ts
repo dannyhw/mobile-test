@@ -8,6 +8,16 @@ export function setDevice(device: Device): void {
   g[DEVICE_KEY] = device
 }
 
+export function getDevice(): Device {
+  if (!g[DEVICE_KEY]) {
+    throw new Error(
+      'Device not initialized — are you running inside a test?\n\n' +
+      'Make sure you are using the mobile-test vitest plugin in your vitest config.'
+    )
+  }
+  return g[DEVICE_KEY]
+}
+
 export const device: Device = new Proxy({} as Device, {
   get(_target, prop) {
     if (!g[DEVICE_KEY]) {
