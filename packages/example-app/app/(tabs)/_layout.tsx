@@ -1,6 +1,10 @@
 import { useTheme } from "@react-navigation/native";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
+export const unstable_settings = {
+  initialRouteName: "(counter)/index",
+};
+
 export default function TabLayout() {
   const { colors, dark } = useTheme();
 
