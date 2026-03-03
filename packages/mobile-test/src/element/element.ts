@@ -1,12 +1,13 @@
 import type { Locator } from './by.js'
 import type { ElementHandle } from './types.js'
-import { toFrame, frameCenter } from './types.js'
+import { toFrame, frameCenter, visibleFramePercentage, type Frame } from './types.js'
 import { findElement, findAllElements } from './match.js'
 import { getDriverClient, getActiveBundleId } from '../driver/context.js'
 import { getActionTimeout } from '../config-context.js'
 import { log } from '../logger.js'
 
 const POLL_INTERVAL = 200
+const MIN_VISIBLE_PERCENTAGE = 0.1
 
 export class Element {
   private index?: number
@@ -134,8 +135,7 @@ export class Element {
   async scrollTo(target: Element, direction: 'up' | 'down' | 'left' | 'right' = 'down', maxScrolls = 10): Promise<void> {
     return log.time(`scrollTo(${target.locator})`, async () => {
       for (let i = 0; i < maxScrolls; i++) {
-        const found = await target.tryResolve()
-        if (found) return
+        if (await target.isVisible()) return
         await this.swipe(direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right')
         await new Promise(r => setTimeout(r, 300))
       }
@@ -143,22 +143,38 @@ export class Element {
     })
   }
 
-  async swipe(direction: 'up' | 'down' | 'left' | 'right', distance = 200): Promise<void> {
+  async swipe(direction: 'up' | 'down' | 'left' | 'right', _distance = 200): Promise<void> {
     const el = await this.resolve()
-    const center = frameCenter(toFrame(el.frame))
-    const offsets = {
-      up: { dx: 0, dy: -distance },
-      down: { dx: 0, dy: distance },
-      left: { dx: -distance, dy: 0 },
-      right: { dx: distance, dy: 0 },
+    const frame = toFrame(el.frame)
+    const centerX = frame.x + frame.width * 0.5
+    const centerY = frame.y + frame.height * 0.5
+
+    // Keep scroll gestures away from screen edges and overlays like tab bars.
+    const topY = frame.y + frame.height * 0.3
+    const bottomY = frame.y + frame.height * 0.7
+    const leftX = frame.x + frame.width * 0.3
+    const rightX = frame.x + frame.width * 0.7
+
+    const points = {
+      up: { startX: centerX, startY: bottomY, endX: centerX, endY: topY },
+      down: { startX: centerX, startY: topY, endX: centerX, endY: bottomY },
+      left: { startX: rightX, startY: centerY, endX: leftX, endY: centerY },
+      right: { startX: leftX, startY: centerY, endX: rightX, endY: centerY },
     }
-    const { dx, dy } = offsets[direction]
-    await getDriverClient().swipe(center.x, center.y, center.x + dx, center.y + dy)
+
+    const gesture = points[direction]
+    await getDriverClient().swipe(
+      gesture.startX,
+      gesture.startY,
+      gesture.endX,
+      gesture.endY,
+    )
   }
 
   async isVisible(): Promise<boolean> {
     const el = await this.tryResolve()
-    return el !== null
+    if (!el) return false
+    return this.isHandleVisible(el)
   }
 
   async getText(): Promise<string | null> {
@@ -167,7 +183,22 @@ export class Element {
   }
 
   async exists(): Promise<boolean> {
-    return this.isVisible()
+    return (await this.tryResolve()) !== null
+  }
+
+  private async isHandleVisible(handle: ElementHandle): Promise<boolean> {
+    const viewport = await this.getViewport()
+    return visibleFramePercentage(toFrame(handle.frame), viewport) >= MIN_VISIBLE_PERCENTAGE
+  }
+
+  private async getViewport(): Promise<Frame> {
+    const info = await getDriverClient().deviceInfo()
+    return {
+      x: 0,
+      y: 0,
+      width: info.widthPoints,
+      height: info.heightPoints,
+    }
   }
 }
 

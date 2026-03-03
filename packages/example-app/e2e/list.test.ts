@@ -26,6 +26,7 @@ describe("List", () => {
       "down"
     );
     await expect(element(by.id("list-item-29"))).toBeVisible();
+    await device.waitForAnimationToEnd();
 
     // Verify item by regex label
     await expect(element(by.label(/Item 2\d/))).toBeVisible();

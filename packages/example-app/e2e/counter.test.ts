@@ -7,8 +7,11 @@ describe("Counter App", () => {
 
     await device.waitForAnimationToEnd();
 
-    // Verify the button and counter are visible
-    await expect(element(by.id("click-button"))).toBeVisible();
+    // Ensure we are on the counter tab even if tab state persisted from a prior run.
+    await element(by.text("Counter")).tap();
+    await device.waitForAnimationToEnd();
+
+    // Verify the counter screen is visible.
     await expect(element(by.id("counter"))).toBeVisible();
 
     // Screenshot the initial state
@@ -16,6 +19,12 @@ describe("Counter App", () => {
   });
 
   it("increments the counter on tap", async () => {
+    await element(by.text("Counter")).tap();
+    await device.waitForAnimationToEnd();
+
+    await element(by.id("counter-scroll")).scrollTo(element(by.id("click-button")));
+    await expect(element(by.id("click-button"))).toBeVisible();
+
     // Tap the button
     await element(by.id("click-button")).tap();
 
