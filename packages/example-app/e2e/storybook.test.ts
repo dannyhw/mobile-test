@@ -10,7 +10,6 @@ const STORY_SETTLE_DELAY_MS = 250;
 async function getStoryIds(): Promise<string[]> {
   const index = await buildIndex({ configPath: STORYBOOK_CONFIG_PATH });
 
-  console.log("index:", index);
   return Object.values(index.entries)
     .filter((entry) => entry.type === "story")
     .map((entry) => entry.id);
