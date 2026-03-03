@@ -1,12 +1,7 @@
+import { ActionButton } from "@/components/ui/ActionButton";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { useRef, useState } from "react";
-import {
-  Animated,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, ScrollView, StyleSheet, Text } from "react-native";
 
 import { useNativePalette } from "../../../lib/native-ui";
 
@@ -51,14 +46,13 @@ export default function Animations() {
         },
       ]}
     >
-      <View style={[styles.section, { backgroundColor: palette.surfaceMuted }]}>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>
-          Preview
-        </Text>
-        <Text style={[styles.sectionCopy, { color: palette.secondaryText }]}>
-          Run a short native-driven animation and capture the settled frame.
-        </Text>
-
+      <SectionCard
+        backgroundColor={palette.surfaceMuted}
+        title="Preview"
+        titleColor={palette.text}
+        description="Run a short native-driven animation and capture the settled frame."
+        descriptionColor={palette.secondaryText}
+      >
         <Animated.View
           testID="anim-box"
           style={[
@@ -75,39 +69,23 @@ export default function Animations() {
           {status}
         </Text>
 
-        <Pressable
+        <ActionButton
           testID="anim-trigger"
-          accessibilityRole="button"
+          label="Start animation"
           onPress={startAnimation}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            {
-              backgroundColor: palette.tint,
-              opacity: pressed ? 0.82 : 1,
-            },
-          ]}
-        >
-          <Text style={styles.primaryButtonText}>Start animation</Text>
-        </Pressable>
+          backgroundColor={palette.tint}
+        />
 
-        <Pressable
+        <ActionButton
           testID="anim-reset"
-          accessibilityRole="button"
+          label="Reset"
           onPress={reset}
-          style={({ pressed }) => [
-            styles.secondaryButton,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.separator,
-              opacity: pressed ? 0.72 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.secondaryButtonText, { color: palette.text }]}>
-            Reset
-          </Text>
-        </Pressable>
-      </View>
+          variant="secondary"
+          backgroundColor={palette.surface}
+          borderColor={palette.separator}
+          textColor={palette.text}
+        />
+      </SectionCard>
     </ScrollView>
   );
 }
@@ -117,20 +95,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 24,
-  },
-  section: {
-    borderCurve: "continuous",
-    borderRadius: 24,
-    gap: 12,
-    padding: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  sectionCopy: {
-    fontSize: 15,
-    lineHeight: 21,
   },
   animatedBox: {
     alignSelf: "center",
@@ -144,29 +108,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
-  },
-  primaryButton: {
-    alignItems: "center",
-    borderCurve: "continuous",
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    alignItems: "center",
-    borderCurve: "continuous",
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  secondaryButtonText: {
-    fontSize: 17,
-    fontWeight: "600",
   },
 });

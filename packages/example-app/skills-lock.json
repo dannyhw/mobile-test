@@ -15,6 +15,16 @@
       "source": "expo/skills",
       "sourceType": "github",
       "computedHash": "234e2633b7fbcef2d479f8fe8ab20d53d08ed3e4beec7c965da4aff5b43affe7"
+    },
+    "setup-react-native-storybook": {
+      "source": "storybookjs/react-native",
+      "sourceType": "github",
+      "computedHash": "5a57f8d57423e9ea60d3527413e943a7e01dde167fc37123391fc0a61c3924f3"
+    },
+    "writing-react-native-storybook-stories": {
+      "source": "storybookjs/react-native",
+      "sourceType": "github",
+      "computedHash": "4f2edf5fe64c133d9ae677ff926fedee4e4ee1ec2608032e2f57f67ebed7c1d7"
     }
   }
 }

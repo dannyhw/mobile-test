@@ -1,13 +1,8 @@
+import { ActionButton } from "@/components/ui/ActionButton";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { StatusCard } from "@/components/ui/StatusCard";
 import { useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
 import { useNativePalette } from "../../../lib/native-ui";
 
@@ -56,11 +51,11 @@ export default function Form() {
         },
       ]}
     >
-      <View style={[styles.section, { backgroundColor: palette.surfaceMuted }]}>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>
-          Profile
-        </Text>
-
+      <SectionCard
+        backgroundColor={palette.surfaceMuted}
+        title="Profile"
+        titleColor={palette.text}
+      >
         <TextInput
           testID="form-name"
           placeholder="Name"
@@ -82,13 +77,13 @@ export default function Form() {
           autoCapitalize="none"
           style={[styles.input, inputStyle]}
         />
-      </View>
+      </SectionCard>
 
-      <View style={[styles.section, { backgroundColor: palette.surfaceMuted }]}>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>
-          Preferences
-        </Text>
-
+      <SectionCard
+        backgroundColor={palette.surfaceMuted}
+        title="Preferences"
+        titleColor={palette.text}
+      >
         <View
           style={[
             styles.toggleRow,
@@ -99,9 +94,7 @@ export default function Form() {
           ]}
         >
           <View style={styles.toggleCopy}>
-            <Text style={[styles.toggleTitle, { color: palette.text }]}>
-              Accept terms
-            </Text>
+            <Text style={[styles.toggleTitle, { color: palette.text }]}>Accept terms</Text>
             <Text style={[styles.toggleSubtitle, { color: palette.secondaryText }]}>
               Required before submitting the form.
             </Text>
@@ -117,49 +110,31 @@ export default function Form() {
             }}
           />
         </View>
-      </View>
+      </SectionCard>
 
-      <View style={[styles.section, { backgroundColor: palette.surfaceMuted }]}>
-        <Pressable
+      <SectionCard backgroundColor={palette.surfaceMuted}>
+        <ActionButton
           testID="form-submit"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canSubmit }}
+          label="Submit"
           disabled={!canSubmit}
           onPress={handleSubmit}
-          style={({ pressed }) => [
-            styles.submitButton,
-            {
-              backgroundColor: canSubmit ? palette.tint : palette.separator,
-              opacity: pressed ? 0.82 : 1,
-            },
-          ]}
-        >
-          <Text style={styles.submitButtonText}>Submit</Text>
-        </Pressable>
+          backgroundColor={canSubmit ? palette.tint : palette.separator}
+        />
 
-        <View
-          style={[
-            styles.statusCard,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.separator,
-            },
-          ]}
-        >
-          <Text style={[styles.statusLabel, { color: palette.secondaryText }]}>
-            Status
-          </Text>
-          <Text testID="form-status" style={[styles.statusValue, { color: palette.text }]}>
-            {submitted ? `Submitted: ${submittedName}` : "Ready"}
-          </Text>
-          <Text
-            testID="form-timestamp"
-            style={[styles.timestamp, { color: palette.secondaryText }]}
-          >
-            {timestamp}
-          </Text>
-        </View>
-      </View>
+        <StatusCard
+          testID="form-status-card"
+          backgroundColor={palette.surface}
+          borderColor={palette.separator}
+          label="Status"
+          labelColor={palette.secondaryText}
+          value={submitted ? `Submitted: ${submittedName}` : "Ready"}
+          valueColor={palette.text}
+          valueTestID="form-status"
+          timestamp={timestamp}
+          timestampColor={palette.secondaryText}
+          timestampTestID="form-timestamp"
+        />
+      </SectionCard>
     </ScrollView>
   );
 }
@@ -170,16 +145,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 24,
-  },
-  section: {
-    borderCurve: "continuous",
-    borderRadius: 24,
-    padding: 12,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "600",
   },
   input: {
     borderCurve: "continuous",
@@ -211,37 +176,5 @@ const styles = StyleSheet.create({
   toggleSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-  },
-  submitButton: {
-    alignItems: "center",
-    borderCurve: "continuous",
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  statusCard: {
-    borderCurve: "continuous",
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 8,
-    padding: 12,
-  },
-  statusLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-  },
-  statusValue: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  timestamp: {
-    fontSize: 14,
   },
 });
