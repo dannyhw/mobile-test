@@ -22,12 +22,16 @@ export function registerMatchers(): void {
           await new Promise(r => setTimeout(r, POLL_INTERVAL))
         }
 
+        const pass = isNot ? !visible : visible
+
         return {
-          pass: visible,
+          pass,
           message: () =>
-            visible
-              ? `Expected element ${received.locator} not to be visible`
-              : `Expected element ${received.locator} to be visible, but it was not found after ${timeout}ms`,
+            pass
+              ? `Expected element ${received.locator} ${isNot ? '' : 'not '}to be visible`
+              : isNot
+                ? `Expected element ${received.locator} not to be visible, but it was visible`
+                : `Expected element ${received.locator} to be visible, but it was not visible after ${timeout}ms`,
         }
       })
     },

@@ -26,18 +26,12 @@ describe("List", () => {
     // Access first item by id and atIndex
     await expect(element(by.id("list-item-0")).atIndex(0)).toBeVisible();
 
-    // Scroll into the list and then take one more deterministic swipe so the
-    // final screenshot is anchored to a stable scrolled state.
-    await element(by.id("list-scroll")).scrollTo(
-      element(by.id("list-item-18")),
-      "down",
-    );
-    await expect(element(by.id("list-item-18"))).toBeVisible();
-    await expect(element(by.label("Item 18"))).toBeVisible();
-    await element(by.id("list-scroll")).swipe("up");
-    await expect(element(by.id("list-item-22"))).toBeVisible();
+    // Scroll all the way to the bottom for a deterministic screenshot
+    await element(by.id("list-scroll")).scrollToEnd("down");
+    await device.waitForAnimationToEnd();
+    await expect(element(by.label("Item 29"))).toBeVisible();
 
     // Screenshot of the scrolled state
-    await expect(device).toMatchScreenshot("list-scrolled");
+    await expect(device).toMatchScreenshot("list-scrolled-to-bottom");
   });
 });

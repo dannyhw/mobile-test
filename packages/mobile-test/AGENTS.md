@@ -19,7 +19,22 @@ Key references:
 - `bun run build` (or `npx tsup`) — build to dist/
 - `bun run test` — unit tests
 - From example-app: `bun run test:e2e` — e2e tests against a booted simulator
-- **Important**: after source changes, rebuild before running example-app tests (they load from dist/)
+- **Important**: run builds when changes affect dist/runtime behavior or tests that consume built output; docs-only changes do not require a build
+- For example-app e2e runs, rebuild `mobile-test` first when the change impacts `dist/` artifacts
+
+## Simulator One-Off Interactions
+
+Use `agent-device` for one-off simulator interactions and app-state investigation instead of adding temporary test code.
+
+Start with `agent-device --help` for command details.
+
+Useful commands:
+- `agent-device open [appOrUrl]`
+- `agent-device snapshot -i`
+- `agent-device appstate`
+- `agent-device find <locator|text> <action> [value]`
+- `agent-device click <x y|@ref|selector>`
+- `agent-device screenshot [path]`
 
 ## Conventions
 

@@ -4,11 +4,15 @@ import { toFrame, frameCenter, visibleFramePercentage, type Frame } from './type
 import { findElement, findAllElements } from './match.js'
 import { getDriverClient, getActiveBundleId } from '../driver/context.js'
 import { getActionTimeout } from '../config-context.js'
+import { compareBuffers } from '../screenshot/compare.js'
+import { cropToFrame } from '../screenshot/crop.js'
 import { log } from '../logger.js'
 
 const POLL_INTERVAL = 200
 const MIN_VISIBLE_PERCENTAGE = 0.1
 const VIEWPORT_GESTURE_MARGIN = 24
+const END_OF_SCROLL_DIFF_THRESHOLD = 0.5
+const END_OF_SCROLL_STREAK_REQUIRED = 2
 
 export class Element {
   private index?: number
@@ -144,6 +148,80 @@ export class Element {
     })
   }
 
+  /**
+   * Scroll to the very end of the scrollable element.
+   * Keeps swiping until the content stops moving (detected via screenshot comparison).
+   */
+  async scrollToEnd(direction: 'up' | 'down' | 'left' | 'right' = 'down', maxScrolls = 50): Promise<void> {
+    return log.time(`scrollToEnd(${direction})`, async () => {
+      const swipeDir = direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right'
+      const client = getDriverClient()
+      let atEndStreak = 0
+      const handle = await this.resolve()
+      const scrollFrame = toFrame(handle.frame)
+      const { scale } = await client.deviceInfo()
+
+      // Swipe once, wait for it to settle, capture as our reference
+      await this.swipe(swipeDir)
+      let previous = await this.waitForSettled(client, 2_000, scrollFrame, scale)
+
+      for (let i = 1; i < maxScrolls; i++) {
+        await this.swipe(swipeDir)
+        const current = await this.waitForSettled(client, 2_000, scrollFrame, scale)
+        // Compare consecutive post-swipe settled states
+        const diff = await compareBuffers(previous, current)
+        log.debug(`scrollToEnd iteration ${i}: diff=${diff.toFixed(4)}%`)
+        if (diff <= END_OF_SCROLL_DIFF_THRESHOLD) {
+          atEndStreak += 1
+          // Require multiple low-diff swipes to avoid stopping early near the end.
+          if (atEndStreak >= END_OF_SCROLL_STREAK_REQUIRED) {
+            await this.waitForSettled(client, 2_000, scrollFrame, scale)
+            return
+          }
+        } else {
+          atEndStreak = 0
+        }
+        previous = current
+      }
+
+      await this.waitForSettled(client, 2_000, scrollFrame, scale)
+    })
+  }
+
+  /**
+   * Wait for the screen to stop changing (animation settled).
+   * Returns the final stable screenshot.
+   */
+  private async waitForSettled(
+    client: ReturnType<typeof getDriverClient>,
+    timeout = 2_000,
+    frame?: Frame,
+    scale?: number,
+  ): Promise<Buffer> {
+    const start = Date.now()
+    let previous = await this.captureForMotionDiff(client, frame, scale)
+    while (Date.now() - start < timeout) {
+      await new Promise(r => setTimeout(r, 200))
+      const current = await this.captureForMotionDiff(client, frame, scale)
+      const diff = await compareBuffers(previous, current)
+      if (diff <= 0.01) return current
+      previous = current
+    }
+    return previous
+  }
+
+  private async captureForMotionDiff(
+    client: ReturnType<typeof getDriverClient>,
+    frame?: Frame,
+    scale?: number,
+  ): Promise<Buffer> {
+    const screenshot = await client.screenshot()
+    if (frame && scale) {
+      return cropToFrame(screenshot, frame, scale)
+    }
+    return screenshot
+  }
+
   async swipe(direction: 'up' | 'down' | 'left' | 'right', _distance = 200): Promise<void> {
     const el = await this.resolve()
     const frame = toFrame(el.frame)
@@ -153,10 +231,10 @@ export class Element {
     const centerY = gestureFrame.y + gestureFrame.height * 0.5
 
     // Keep gestures inside the visible on-screen portion of the element.
-    const topY = gestureFrame.y + gestureFrame.height * 0.3
-    const bottomY = gestureFrame.y + gestureFrame.height * 0.7
-    const leftX = gestureFrame.x + gestureFrame.width * 0.3
-    const rightX = gestureFrame.x + gestureFrame.width * 0.7
+    const topY = gestureFrame.y + gestureFrame.height * 0.15
+    const bottomY = gestureFrame.y + gestureFrame.height * 0.85
+    const leftX = gestureFrame.x + gestureFrame.width * 0.15
+    const rightX = gestureFrame.x + gestureFrame.width * 0.85
 
     const points = {
       up: { startX: centerX, startY: bottomY, endX: centerX, endY: topY },
@@ -175,9 +253,17 @@ export class Element {
   }
 
   async isVisible(): Promise<boolean> {
-    const el = await this.tryResolve()
-    if (!el) return false
-    return this.isHandleVisible(el)
+    const handles = await this.tryResolveAll()
+    if (handles.length === 0) return false
+
+    const viewport = await this.getViewport()
+    for (const handle of handles) {
+      const percentage = visibleFramePercentage(toFrame(handle.frame), viewport)
+      if (percentage >= MIN_VISIBLE_PERCENTAGE) {
+        return true
+      }
+    }
+    return false
   }
 
   async getText(): Promise<string | null> {
@@ -189,13 +275,26 @@ export class Element {
     return (await this.tryResolve()) !== null
   }
 
-  private async isHandleVisible(handle: ElementHandle): Promise<boolean> {
-    const viewport = await this.getViewport()
-    return visibleFramePercentage(toFrame(handle.frame), viewport) >= MIN_VISIBLE_PERCENTAGE
+  private async tryResolveAll(): Promise<ElementHandle[]> {
+    const client = getDriverClient()
+    const bundleId = getActiveBundleId()
+    const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+    return findAllElements(hierarchy, this.locator)
   }
 
   private async getViewport(): Promise<Frame> {
-    const info = await getDriverClient().deviceInfo()
+    const client = getDriverClient()
+    const bundleId = getActiveBundleId()
+
+    if (bundleId) {
+      const hierarchy = await client.viewHierarchy(bundleId)
+      const frame = toFrame(hierarchy.frame)
+      if (frame.width > 0 && frame.height > 0) {
+        return frame
+      }
+    }
+
+    const info = await client.deviceInfo()
     return {
       x: 0,
       y: 0,

@@ -1,8 +1,8 @@
-## IMPORTANT: Always Build After Changes
+## IMPORTANT: Build When Changes Require It
 
-Never tell the user to build. After making source changes, ALWAYS run the build yourself before stopping. The user should never have to build manually. Just do it.
+Never tell the user to build. For changes that affect built artifacts or runtime behavior, run the relevant build yourself before stopping. The user should never have to build manually.
 
-Always check your own changes by running them and verifying the results before ending. Only end when the job is done.
+For docs-only or non-build-impacting changes, a build is not required. Always verify your own changes before ending.
 
 ---
 
@@ -27,22 +27,20 @@ Store useful findings in research/ so we can refer back when building.
 
 Follow the plan for the current phase in plan/. Use TODO.md in the mobile-test package to track progress on the current milestone. When done, move it to completed-steps/<phase>/.
 
-## Requirements
+## Simulator One-Off Interactions
 
-- Typescript api
-- Written with typescript, uses swift/kotlin where required for native integration
-- doesn't require custom build of the app
-- doesn't require changing app code other than a11y or test ids
-- focus on screenshot testing workflow
-- supports iOS and Android
-- relies on native tooling, provides a thin wrapper around it
-- provides an api similar to existing ts testing tools like playwright/vitest to make it familiar
-- react native first, but can be used with native apps as well
+Use `agent-device` for one-off simulator interactions and app-state investigation.
 
-## Context: Problems with Maestro We Want to Solve
+Start with `agent-device --help` for full command usage.
 
-- not typescript api, requires learning a new language and tool
-- slow
-- way too many layers of abstraction and built with java which is unfamiliar to our target users
-- doesnt have a built in way to compare screenshots
-- not extensible, hard for users to extend and customize for their needs
+Useful commands:
+- `agent-device open [appOrUrl]`
+- `agent-device snapshot -i`
+- `agent-device appstate`
+- `agent-device click <x y|@ref|selector>`
+- `agent-device type <text>`
+- `agent-device screenshot [path]`
+
+## Shared Project Requirements & Context
+
+See `PROJECT_REQUIREMENTS_AND_CONTEXT.md`.
