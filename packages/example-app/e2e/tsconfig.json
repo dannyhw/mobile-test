@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "es2022",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["vitest/globals"],
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "../node_modules/mobile-test/matchers.d.ts"]
+}

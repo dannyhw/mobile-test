@@ -1,0 +1,51 @@
+name: MobileTestDriver
+options:
+  bundleIdPrefix: dev.mobiletest
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.0"
+
+packages:
+  FlyingFox:
+    url: https://github.com/swhitty/FlyingFox
+    exactVersion: "0.22.0"
+
+targets:
+  DriverApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: DriverApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.mobiletest.driverapp
+        INFOPLIST_FILE: DriverApp/Info.plist
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+
+  DriverUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: DriverUITests
+    dependencies:
+      - target: DriverApp
+      - package: FlyingFox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.mobiletest.driver.uitests
+        TEST_HOST: ""
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+
+schemes:
+  DriverApp:
+    build:
+      targets:
+        DriverApp: all
+        DriverUITests: [test]
+    test:
+      targets:
+        - DriverUITests

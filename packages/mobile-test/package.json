@@ -1,0 +1,42 @@
+{
+  "name": "mobile-test",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "TypeScript-first mobile testing framework focused on screenshot testing",
+  "files": ["dist", "matchers.d.ts"],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vitest-plugin": {
+      "import": "./dist/vitest/plugin.js",
+      "types": "./dist/vitest/plugin.d.ts"
+    },
+    "./vitest-setup": {
+      "import": "./dist/vitest/setup.js",
+      "types": "./dist/vitest/setup.d.ts"
+    },
+    "./matchers": {
+      "types": "./matchers.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "execa": "^9.5.2",
+    "odiff-bin": "^3.1.1"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.0"
+  }
+}

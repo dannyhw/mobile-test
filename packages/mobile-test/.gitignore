@@ -1,0 +1,6 @@
+node_modules/
+dist/
+screenshots/latest/
+screenshots/diff/
+ios-driver/build/
+ios-driver/MobileTestDriver.xcodeproj/

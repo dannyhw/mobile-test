@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Reference repos (not part of the project)
+Maestro/
+Detox/
+
+# Build output
+dist/
+
+# Test output (script-based tests)
+baseline-diff-test/
+color-change-test/
+test-screenshots-output/
+
+# Screenshot test artifacts (keep baselines, ignore transient output)
+screenshots/latest/
+screenshots/diff/
+**/e2e/screenshots/latest/
+**/e2e/screenshots/diff/
+
+# iOS build artifacts
+ios-driver/build/
+ios-driver/MobileTestDriver.xcodeproj/
+
+# Expo / React Native
+.expo/
+web-build/
+expo-env.d.ts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Bun lockfile is committed for reproducible installs
