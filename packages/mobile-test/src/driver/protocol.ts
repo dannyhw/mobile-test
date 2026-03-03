@@ -18,6 +18,10 @@ export interface TypeTextRequest {
   text: string
 }
 
+export interface PressKeyRequest {
+  key: 'delete' | 'return' | 'enter' | 'tab' | 'space' | 'escape'
+}
+
 export interface LaunchAppRequest {
   bundleId: string
 }
@@ -36,6 +40,10 @@ export interface DeviceInfoResponse {
 
 export interface StatusResponse {
   status: string
+}
+
+export interface KeyboardStateResponse {
+  visible: boolean
 }
 
 export type ViewHierarchyResponse = ElementHandle

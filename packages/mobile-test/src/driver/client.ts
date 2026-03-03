@@ -2,12 +2,15 @@ import type {
   TapRequest,
   SwipeRequest,
   TypeTextRequest,
+  PressKeyRequest,
   LaunchAppRequest,
   TerminateAppRequest,
   DeviceInfoResponse,
+  KeyboardStateResponse,
   StatusResponse,
   ViewHierarchyResponse,
 } from './protocol.js'
+import { log } from '../logger.js'
 
 export class DriverClient {
   constructor(private baseUrl = 'http://localhost:22087') {}
@@ -29,7 +32,13 @@ export class DriverClient {
   }
 
   async typeText(text: string): Promise<void> {
-    await this.post<TypeTextRequest>('/typeText', { text })
+    return log.time('driver.typeText', async () => {
+      await this.post<TypeTextRequest>('/typeText', { text })
+    })
+  }
+
+  async pressKey(key: PressKeyRequest['key']): Promise<void> {
+    await this.post<PressKeyRequest>('/pressKey', { key })
   }
 
   async eraseText(charactersToErase: number): Promise<void> {
@@ -37,13 +46,17 @@ export class DriverClient {
   }
 
   async screenshot(): Promise<Buffer> {
-    const res = await this.fetch('/screenshot', 'screenshot')
-    return Buffer.from(await res.arrayBuffer())
+    return log.time('driver.screenshot', async () => {
+      const res = await this.fetch('/screenshot', 'screenshot')
+      return Buffer.from(await res.arrayBuffer())
+    })
   }
 
   async viewHierarchy(bundleId?: string): Promise<ViewHierarchyResponse> {
-    const query = bundleId ? `?bundleId=${encodeURIComponent(bundleId)}` : ''
-    return this.get(`/viewHierarchy${query}`)
+    return log.time('driver.viewHierarchy', async () => {
+      const query = bundleId ? `?bundleId=${encodeURIComponent(bundleId)}` : ''
+      return this.get(`/viewHierarchy${query}`)
+    })
   }
 
   async launchApp(bundleId: string): Promise<void> {
@@ -56,6 +69,12 @@ export class DriverClient {
 
   async deviceInfo(): Promise<DeviceInfoResponse> {
     return this.get('/deviceInfo')
+  }
+
+  async keyboardVisible(bundleId?: string): Promise<boolean> {
+    const query = bundleId ? `?bundleId=${encodeURIComponent(bundleId)}` : ''
+    const response = await this.get<KeyboardStateResponse>(`/keyboard${query}`)
+    return response.visible
   }
 
   private async fetch(path: string, operation: string): Promise<Response> {

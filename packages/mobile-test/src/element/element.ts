@@ -4,6 +4,7 @@ import { toFrame, frameCenter } from './types.js'
 import { findElement, findAllElements } from './match.js'
 import { getDriverClient, getActiveBundleId } from '../driver/context.js'
 import { getActionTimeout } from '../config-context.js'
+import { log } from '../logger.js'
 
 const POLL_INTERVAL = 200
 
@@ -26,31 +27,36 @@ export class Element {
    * Retries until the element is found or timeout is reached.
    */
   async resolve(timeout = getActionTimeout()): Promise<ElementHandle> {
-    const client = getDriverClient()
-    const bundleId = getActiveBundleId()
-    const start = Date.now()
+    return log.time(`resolve(${this.locator})`, async () => {
+      const client = getDriverClient()
+      const bundleId = getActiveBundleId()
+      const start = Date.now()
+      let polls = 0
 
-    while (true) {
-      const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
-      let found: ElementHandle | null
-      if (this.index !== undefined) {
-        const all = findAllElements(hierarchy, this.locator, this.index + 1)
-        found = all.length > this.index ? all[this.index] : null
-      } else {
-        found = findElement(hierarchy, this.locator)
+      while (true) {
+        polls++
+        const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+        log.debug(`resolve(${this.locator}) poll #${polls}`)
+        let found: ElementHandle | null
+        if (this.index !== undefined) {
+          const all = findAllElements(hierarchy, this.locator, this.index + 1)
+          found = all.length > this.index ? all[this.index] : null
+        } else {
+          found = findElement(hierarchy, this.locator)
+        }
+        if (found) return found
+
+        if (Date.now() - start >= timeout) {
+          throw new Error(
+            `Element not found: ${this.locator} after ${timeout}ms\n\n` +
+            `The element could not be found in the view hierarchy. ` +
+            `Make sure the element exists and has the correct testID or text.`
+          )
+        }
+
+        await new Promise(r => setTimeout(r, POLL_INTERVAL))
       }
-      if (found) return found
-
-      if (Date.now() - start >= timeout) {
-        throw new Error(
-          `Element not found: ${this.locator} after ${timeout}ms\n\n` +
-          `The element could not be found in the view hierarchy. ` +
-          `Make sure the element exists and has the correct testID or text.`
-        )
-      }
-
-      await new Promise(r => setTimeout(r, POLL_INTERVAL))
-    }
+    })
   }
 
   /**
@@ -69,9 +75,11 @@ export class Element {
   }
 
   async tap(): Promise<void> {
-    const el = await this.resolve()
-    const center = frameCenter(toFrame(el.frame))
-    await getDriverClient().tap(center.x, center.y)
+    return log.time(`tap(${this.locator})`, async () => {
+      const el = await this.resolve()
+      const center = frameCenter(toFrame(el.frame))
+      await getDriverClient().tap(center.x, center.y)
+    })
   }
 
   async doubleTap(): Promise<void> {
@@ -81,27 +89,30 @@ export class Element {
   }
 
   async type(text: string): Promise<void> {
-    // Tap to focus, then type
-    await this.tap()
-    await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
-    await getDriverClient().typeText(text)
+    return log.time(`type(${this.locator})`, async () => {
+      // Tap to focus, then type — keyboard wait is handled driver-side
+      await this.tap()
+      await getDriverClient().typeText(text)
+    })
   }
 
   async replaceText(text: string): Promise<void> {
-    // Tap to focus, erase existing text, then type replacement
-    const el = await this.resolve()
-    const center = frameCenter(toFrame(el.frame))
-    await getDriverClient().tap(center.x, center.y)
-    await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
+    return log.time(`replaceText(${this.locator})`, async () => {
+      // Tap to focus, erase existing text, then type replacement
+      const el = await this.resolve()
+      const center = frameCenter(toFrame(el.frame))
+      await getDriverClient().tap(center.x, center.y)
+      await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
 
-    // Erase existing text by sending delete keys
-    const currentValue = el.value ?? ''
-    if (currentValue.length > 0) {
-      await getDriverClient().eraseText(currentValue.length)
-      await new Promise(r => setTimeout(r, 200))
-    }
+      // Erase existing text by sending delete keys
+      const currentValue = el.value ?? ''
+      if (currentValue.length > 0) {
+        await getDriverClient().eraseText(currentValue.length)
+        await new Promise(r => setTimeout(r, 200))
+      }
 
-    await getDriverClient().typeText(text)
+      await getDriverClient().typeText(text)
+    })
   }
 
   async longPress(duration = 1.0): Promise<void> {
@@ -121,13 +132,15 @@ export class Element {
    * Scroll the current element until the target element becomes visible.
    */
   async scrollTo(target: Element, direction: 'up' | 'down' | 'left' | 'right' = 'down', maxScrolls = 10): Promise<void> {
-    for (let i = 0; i < maxScrolls; i++) {
-      const found = await target.tryResolve()
-      if (found) return
-      await this.swipe(direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right')
-      await new Promise(r => setTimeout(r, 300))
-    }
-    throw new Error(`Could not find ${target.locator} after scrolling ${maxScrolls} times`)
+    return log.time(`scrollTo(${target.locator})`, async () => {
+      for (let i = 0; i < maxScrolls; i++) {
+        const found = await target.tryResolve()
+        if (found) return
+        await this.swipe(direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right')
+        await new Promise(r => setTimeout(r, 300))
+      }
+      throw new Error(`Could not find ${target.locator} after scrolling ${maxScrolls} times`)
+    })
   }
 
   async swipe(direction: 'up' | 'down' | 'left' | 'right', distance = 200): Promise<void> {

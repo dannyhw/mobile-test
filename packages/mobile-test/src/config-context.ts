@@ -16,6 +16,7 @@ const defaults = {
   screenshotThreshold: 0.1,
   screenshotMaxDiffPercentage: 0,
   screenshotAntialiasing: true,
+  logLevel: 'info' as 'silent' | 'info' | 'debug',
 }
 
 function getConfig() {
@@ -35,6 +36,10 @@ export function getActionTimeout(): number {
 
 export function getScreenshotsDir(): string {
   return getConfig().screenshotsDir
+}
+
+export function getLogLevel(): 'silent' | 'info' | 'debug' {
+  return getConfig().logLevel
 }
 
 export function getScreenshotDefaults() {

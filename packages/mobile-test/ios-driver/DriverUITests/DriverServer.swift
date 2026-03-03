@@ -29,6 +29,7 @@ struct DriverServer {
         // Health + info
         await server.appendRoute(HTTPRoute("status"), to: StatusHandler())
         await server.appendRoute(HTTPRoute("deviceInfo"), to: DeviceInfoHandler())
+        await server.appendRoute(HTTPRoute("keyboard"), to: KeyboardStateHandler())
         await server.appendRoute(HTTPRoute("screenshot"), to: ScreenshotHandler())
 
         // Actions
@@ -36,6 +37,7 @@ struct DriverServer {
         await server.appendRoute(HTTPRoute("doubleTap"), to: DoubleTapHandler())
         await server.appendRoute(HTTPRoute("swipe"), to: SwipeHandler())
         await server.appendRoute(HTTPRoute("typeText"), to: TypeTextHandler())
+        await server.appendRoute(HTTPRoute("pressKey"), to: PressKeyHandler())
         await server.appendRoute(HTTPRoute("eraseText"), to: EraseTextHandler())
 
         // View hierarchy

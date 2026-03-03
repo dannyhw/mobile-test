@@ -15,6 +15,14 @@ struct TypeTextHandler: HTTPHandler {
                 return HTTPResponse(statusCode: .ok)
             }
 
+            // Wait for keyboard to appear before typing (up to 1s, polling every 200ms)
+            let deadline = Date().addingTimeInterval(1.0)
+            while Date() < deadline {
+                let app = XCUIApplication()
+                if app.keyboards.firstMatch.exists { break }
+                try await Task.sleep(nanoseconds: 200_000_000)
+            }
+
             // Type the first character slowly to avoid dropped characters
             // from autocorrect/keyboard listener race conditions
             let firstChar = String(text.prefix(1))

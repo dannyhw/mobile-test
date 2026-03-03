@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 import { mobileTestPlugin } from "mobile-test";
 
 export default defineConfig({
-  plugins: [mobileTestPlugin()],
+  plugins: [mobileTestPlugin({ logLevel: 'debug' })],
   test: {
     include: ["e2e/**/*.test.ts"],
     testTimeout: 60_000,

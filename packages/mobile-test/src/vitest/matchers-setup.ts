@@ -1,6 +1,8 @@
 import { DriverClient, setDriverClient, setDevice, setTestConfig } from 'mobile-test'
 import { IOSDevice } from '../device/ios-device.js'
 import { registerMatchers } from '../expect/matchers.js'
+import { setLogLevel, log } from '../logger.js'
+import { afterAll } from 'vitest'
 
 // Connect to the driver that globalSetup started
 const port = process.env.__MOBILE_TEST_PORT
@@ -16,9 +18,20 @@ if (!port || !deviceName || !deviceUdid) {
 
 // Apply config overrides if passed from globalSetup
 const actionTimeout = process.env.__MOBILE_TEST_ACTION_TIMEOUT
-if (actionTimeout) {
-  setTestConfig({ actionTimeout: Number(actionTimeout) })
+const logLevel = process.env.__MOBILE_TEST_LOG_LEVEL as 'silent' | 'info' | 'debug' | undefined
+if (actionTimeout || logLevel) {
+  setTestConfig({
+    ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
+    ...(logLevel ? { logLevel } : {}),
+  })
 }
+if (logLevel) {
+  setLogLevel(logLevel)
+}
+
+afterAll(() => {
+  log.printTimingSummary()
+})
 
 const client = new DriverClient(`http://localhost:${port}`)
 setDriverClient(client)

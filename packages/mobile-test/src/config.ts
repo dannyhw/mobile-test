@@ -22,12 +22,14 @@ export interface MobileTestConfig {
   screenshots?: ScreenshotConfig
   timeout?: number
   actionTimeout?: number
+  logLevel?: 'silent' | 'info' | 'debug'
 }
 
-export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots'>> {
+export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots' | 'logLevel'>> {
   app: AppConfig
   projects?: ProjectConfig[]
   screenshots: Required<ScreenshotConfig>
+  logLevel: 'silent' | 'info' | 'debug'
 }
 
 const defaults = {
@@ -49,5 +51,6 @@ export function defineConfig(config: MobileTestConfig): ResolvedConfig {
     screenshots: { ...defaults.screenshots, ...config.screenshots },
     timeout: config.timeout ?? defaults.timeout,
     actionTimeout: config.actionTimeout ?? defaults.actionTimeout,
+    logLevel: config.logLevel ?? 'info',
   }
 }

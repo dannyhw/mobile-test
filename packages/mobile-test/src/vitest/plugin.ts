@@ -46,6 +46,9 @@ export function mobileTestPlugin(config?: MobileTestConfig) {
       if (config?.actionTimeout) {
         process.env.__MOBILE_TEST_ACTION_TIMEOUT = String(config.actionTimeout)
       }
+      if (config?.logLevel) {
+        process.env.__MOBILE_TEST_LOG_LEVEL = config.logLevel
+      }
       if (config?.screenshots?.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
         process.env.UPDATE_SCREENSHOTS = 'true'
       }
