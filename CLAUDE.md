@@ -2,13 +2,24 @@ Bun monorepo with two packages:
 
 packages/mobile-test/ - our mobile test framework
 packages/example-app/ - Expo React Native app used for testing
-research/ - research on existing tools and approaches
+
+## Project Structure
+
+- ROADMAP.md — overall architecture, API design, and phased plan
+- plan/ — detailed implementation plans per phase
+- research/ — deep dives on existing tools (Maestro, Detox, Appium, Owl, Playwright)
 
 Maestro/ and Detox/ are reference repos (gitignored, not part of the project).
 
-store all useful information and findings in research/ as you go, so we can refer back to it when building our new tool.
+## When Researching
 
-requirements:
+Store useful findings in research/ so we can refer back when building.
+
+## When Building
+
+Follow the plan for the current phase in plan/. Use TODO.md in the mobile-test package to track progress on the current milestone. When done, move it to completed-steps/<phase>/.
+
+## Requirements
 
 - Typescript api
 - Written with typescript, uses swift/kotlin where required for native integration
@@ -20,22 +31,10 @@ requirements:
 - provides an api similar to existing ts testing tools like playwright/vitest to make it familiar
 - react native first, but can be used with native apps as well
 
-problems with maestro we want to solve:
+## Context: Problems with Maestro We Want to Solve
 
 - not typescript api, requires learning a new language and tool
 - slow
 - way too many layers of abstraction and built with java which is unfamiliar to our target users
-- doesnt have a built in way to compaire screenshots
+- doesnt have a built in way to compare screenshots
 - not extensible, hard for users to extend and customize for their needs
-
-good things about maestro:
-
-- works automatically with most projects without custom builds
-- supports both iOS and Android
-- has the commands we need like press, swipe, etc
-
-other references to look at:
-
-- detox - testing tool for react native, but requires custom build and has a lot of setup and maintenance overhead
-- appium and webdriverio - popular testing tools for native apps, but not focused on react native and can be complex to set up and use
-- owl - screenshot testing tool for react native

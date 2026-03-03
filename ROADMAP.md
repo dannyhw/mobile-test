@@ -1,7 +1,8 @@
-# Synthesis: How to Build Our Mobile Test Framework
+# mobile-test — Roadmap & Architecture
 
-> This document synthesizes findings from all research into a concrete approach for building our tool.
-> See individual research docs for deep dives: [Maestro](./maestro-deep-dive.md), [Detox](./detox-deep-dive.md), [Appium/WDIO](./appium-webdriverio-research.md), [Owl](./owl-research.md), [Playwright/Vitest](./playwright-vitest-api-patterns.md)
+> Overall architecture, API design, and phased implementation plan.
+> See [research/](./research/) for deep dives: [Maestro](./research/maestro-deep-dive.md), [Detox](./research/detox-deep-dive.md), [Appium/WDIO](./research/appium-webdriverio-research.md), [Owl](./research/owl-research.md), [Playwright/Vitest](./research/playwright-vitest-api-patterns.md)
+> See [plan/](./plan/) for detailed phase implementation plans.
 
 ---
 
@@ -356,9 +357,11 @@ Built-in, first-class, not an afterthought:
 
 ---
 
-## Recommended Implementation Order
+## Implementation Phases
 
-1. **Phase 1 — iOS Simulator MVP**
+Detailed plans for each phase live in [`plan/`](./plan/).
+
+1. **Phase 1 — iOS Simulator MVP** ✅ [plan](./plan/phase-1-ios-mvp.md)
    - Swift XCTest driver with HTTP server (tap, type, screenshot, element tree)
    - TypeScript client that talks to driver over HTTP
    - Basic device management via `xcrun simctl`
@@ -366,21 +369,20 @@ Built-in, first-class, not an afterthought:
    - Vitest integration with `toMatchScreenshot()`
    - Basic locators: `by.id()`, `by.text()`
 
-2. **Phase 2 — Full iOS + Screenshot Workflow**
-   - Remaining actions (swipe, scroll, longPress, etc.)
-   - Auto-waiting on actions and assertions
-   - Status bar normalization
-   - Baseline management with update workflow
+2. **Phase 2 — Full iOS + Screenshot Workflow** 🔜 [plan](./plan/phase-2-full-ios.md)
    - Region masking for dynamic content
    - Element-level screenshots
+   - Additional locators (`by.type()`, `by.label()`, chaining)
+   - Additional actions (`doubleTap()`, `replaceText()`, `scrollTo()`)
+   - Additional assertions (`toBeEnabled()`, `toHaveAttribute()`)
 
-3. **Phase 3 — Android Support**
+3. **Phase 3 — Android Support** [plan](./plan/phase-3-android.md)
    - Kotlin UIAutomator driver with HTTP server (same API as iOS)
    - ADB-based device management
    - Port forwarding setup
    - Cross-platform test running
 
-4. **Phase 4 — Polish**
+4. **Phase 4 — Polish** [plan](./plan/phase-4-polish.md)
    - CLI tool (`bunx mobile-test init`, `bunx mobile-test run`)
    - HTML report with screenshot diffs
    - CI/CD guidance and examples
