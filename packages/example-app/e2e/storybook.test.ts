@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const APP_BUNDLE_ID = "com.dannyhw.exampleapp";
 const STORYBOOK_CONFIG_PATH = ".rnstorybook";
 const STORYBOOK_CHANNEL_URL = "http://localhost:7007/send-event";
-const STORY_SETTLE_DELAY_MS = 250;
+const STORY_SETTLE_DELAY_MS = 100;
 
 async function getStoryIds(): Promise<string[]> {
   const index = await buildIndex({ configPath: STORYBOOK_CONFIG_PATH });
@@ -74,7 +74,7 @@ describe("Storybook", () => {
       await new Promise((resolve) =>
         setTimeout(resolve, STORY_SETTLE_DELAY_MS),
       );
-      await device.waitForAnimationToEnd({ timeout: 2_500, interval: 200 });
+      await device.waitForAnimationToEnd({ timeout: 500, interval: 100 });
 
       await expect(device).toMatchScreenshot(`storybook-${storyId}`);
     }
