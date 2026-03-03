@@ -2,7 +2,7 @@ import { expect } from 'vitest'
 import type { Element } from '../element/element.js'
 import type { Device } from '../device/types.js'
 import { takeAndCompare, type TakeAndCompareOptions } from '../screenshot/workflow.js'
-import { getActionTimeout } from '../config-context.js'
+import { getActionTimeout, getScreenshotDefaults, getScreenshotsDir } from '../config-context.js'
 import { log } from '../logger.js'
 
 const POLL_INTERVAL = 200
@@ -119,8 +119,11 @@ export function registerMatchers(): void {
         const { getDevice } = await import('../device/index.js')
         const dev = isElement ? getDevice() : received as Device
         const deviceInfo = { name: dev.name, udid: dev.udid, platform: dev.platform }
+        const screenshotDefaults = getScreenshotDefaults()
         const resolvedOptions: TakeAndCompareOptions = {
+          ...screenshotDefaults,
           ...options,
+          screenshotsDir: options?.screenshotsDir ?? getScreenshotsDir(),
           ...(isElement ? { cropElement: received as Element } : {}),
         }
         const result = await takeAndCompare(name, deviceInfo, resolvedOptions)

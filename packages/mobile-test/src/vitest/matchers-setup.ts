@@ -19,10 +19,12 @@ if (!port || !deviceName || !deviceUdid) {
 // Apply config overrides if passed from globalSetup
 const actionTimeout = process.env.__MOBILE_TEST_ACTION_TIMEOUT
 const logLevel = process.env.__MOBILE_TEST_LOG_LEVEL as 'silent' | 'info' | 'debug' | undefined
-if (actionTimeout || logLevel) {
+const screenshotsDir = process.env.__MOBILE_TEST_SCREENSHOTS_DIR
+if (actionTimeout || logLevel || screenshotsDir) {
   setTestConfig({
     ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
     ...(logLevel ? { logLevel } : {}),
+    ...(screenshotsDir ? { screenshotsDir } : {}),
   })
 }
 if (logLevel) {

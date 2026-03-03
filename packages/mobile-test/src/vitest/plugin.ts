@@ -49,6 +49,9 @@ export function mobileTestPlugin(config?: MobileTestConfig) {
       if (config?.logLevel) {
         process.env.__MOBILE_TEST_LOG_LEVEL = config.logLevel
       }
+      if (config?.screenshots?.dir) {
+        process.env.__MOBILE_TEST_SCREENSHOTS_DIR = config.screenshots.dir
+      }
       if (config?.screenshots?.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
         process.env.UPDATE_SCREENSHOTS = 'true'
       }
