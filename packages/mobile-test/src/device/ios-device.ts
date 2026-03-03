@@ -24,6 +24,11 @@ export class IOSDevice implements Device {
   async launch(bundleId: string): Promise<void> {
     return log.time('device.launch', async () => {
       if (this.client) {
+        try {
+          await this.client.terminateApp(bundleId)
+        } catch {
+          // Ignore termination failures when the app is not already running.
+        }
         await this.client.launchApp(bundleId)
       } else {
         await execaCommand(`xcrun simctl launch ${this.udid} ${bundleId}`)

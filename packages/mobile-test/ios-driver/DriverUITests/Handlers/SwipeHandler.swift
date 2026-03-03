@@ -14,10 +14,9 @@ struct SwipeHandler: HTTPHandler {
             let end = CGPoint(x: CGFloat(body.endX), y: CGFloat(body.endY))
             let duration = body.duration ?? 0.5
 
-            let description = "Swipe from \(start.debugDescription) to \(end.debugDescription) with \(duration) duration"
-            try EventTarget().dispatchEvent(description: description) {
-                EventRecord().addSwipeEvent(start: start, end: end, duration: duration)
-            }
+            let eventRecord = EventRecord()
+            _ = eventRecord.addSwipeEvent(start: start, end: end, duration: duration)
+            try await RunnerDaemonProxy().synthesize(eventRecord: eventRecord)
             return HTTPResponse(statusCode: .ok)
         } catch {
             return AppError(message: "Error swiping: \(error.localizedDescription)").httpResponse

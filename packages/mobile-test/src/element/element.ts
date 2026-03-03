@@ -8,6 +8,7 @@ import { log } from '../logger.js'
 
 const POLL_INTERVAL = 200
 const MIN_VISIBLE_PERCENTAGE = 0.1
+const VIEWPORT_GESTURE_MARGIN = 24
 
 export class Element {
   private index?: number
@@ -146,14 +147,16 @@ export class Element {
   async swipe(direction: 'up' | 'down' | 'left' | 'right', _distance = 200): Promise<void> {
     const el = await this.resolve()
     const frame = toFrame(el.frame)
-    const centerX = frame.x + frame.width * 0.5
-    const centerY = frame.y + frame.height * 0.5
+    const viewport = await this.getViewport()
+    const gestureFrame = this.getGestureFrame(frame, viewport)
+    const centerX = gestureFrame.x + gestureFrame.width * 0.5
+    const centerY = gestureFrame.y + gestureFrame.height * 0.5
 
-    // Keep scroll gestures away from screen edges and overlays like tab bars.
-    const topY = frame.y + frame.height * 0.3
-    const bottomY = frame.y + frame.height * 0.7
-    const leftX = frame.x + frame.width * 0.3
-    const rightX = frame.x + frame.width * 0.7
+    // Keep gestures inside the visible on-screen portion of the element.
+    const topY = gestureFrame.y + gestureFrame.height * 0.3
+    const bottomY = gestureFrame.y + gestureFrame.height * 0.7
+    const leftX = gestureFrame.x + gestureFrame.width * 0.3
+    const rightX = gestureFrame.x + gestureFrame.width * 0.7
 
     const points = {
       up: { startX: centerX, startY: bottomY, endX: centerX, endY: topY },
@@ -199,6 +202,37 @@ export class Element {
       width: info.widthPoints,
       height: info.heightPoints,
     }
+  }
+
+  private getGestureFrame(frame: Frame, viewport: Frame): Frame {
+    const insetViewport: Frame = {
+      x: viewport.x + VIEWPORT_GESTURE_MARGIN,
+      y: viewport.y + VIEWPORT_GESTURE_MARGIN,
+      width: Math.max(1, viewport.width - VIEWPORT_GESTURE_MARGIN * 2),
+      height: Math.max(1, viewport.height - VIEWPORT_GESTURE_MARGIN * 2),
+    }
+
+    const intersected = this.intersectFrames(frame, insetViewport)
+    if (intersected) {
+      return intersected
+    }
+
+    return insetViewport
+  }
+
+  private intersectFrames(a: Frame, b: Frame): Frame | null {
+    const x = Math.max(a.x, b.x)
+    const y = Math.max(a.y, b.y)
+    const right = Math.min(a.x + a.width, b.x + b.width)
+    const bottom = Math.min(a.y + a.height, b.y + b.height)
+    const width = right - x
+    const height = bottom - y
+
+    if (width <= 0 || height <= 0) {
+      return null
+    }
+
+    return { x, y, width, height }
   }
 }
 
