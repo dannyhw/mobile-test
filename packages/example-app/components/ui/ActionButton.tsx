@@ -1,31 +1,37 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 
+import { useNativePalette } from "@/lib/native-ui";
+
 type ActionButtonVariant = "primary" | "secondary";
 
 type ActionButtonProps = {
   accessibilityLabel?: string;
-  backgroundColor: string;
-  borderColor?: string;
   disabled?: boolean;
   label: string;
   onPress: () => void;
   testID?: string;
-  textColor?: string;
   variant?: ActionButtonVariant;
 };
 
 export function ActionButton({
   accessibilityLabel,
-  backgroundColor,
-  borderColor,
   disabled = false,
   label,
   onPress,
   testID,
-  textColor,
   variant = "primary",
 }: ActionButtonProps) {
-  const resolvedTextColor = textColor ?? (variant === "primary" ? "#fff" : "#111");
+  const palette = useNativePalette();
+  const isPrimary = variant === "primary";
+  const resolvedBackgroundColor = isPrimary
+    ? disabled
+      ? palette.separator
+      : palette.tint
+    : disabled
+      ? palette.surfaceMuted
+      : palette.surface;
+  const resolvedTextColor = isPrimary ? "#fff" : disabled ? palette.secondaryText : palette.text;
+  const resolvedBorderColor = isPrimary ? undefined : palette.separator;
 
   return (
     <Pressable
@@ -39,8 +45,8 @@ export function ActionButton({
         styles.base,
         variant === "primary" ? null : styles.secondary,
         {
-          backgroundColor,
-          borderColor: variant === "secondary" ? borderColor : undefined,
+          backgroundColor: resolvedBackgroundColor,
+          borderColor: resolvedBorderColor,
           opacity: disabled ? 1 : pressed ? (variant === "primary" ? 0.82 : 0.72) : 1,
         },
       ]}

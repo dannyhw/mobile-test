@@ -51,11 +51,7 @@ export default function Form() {
         },
       ]}
     >
-      <SectionCard
-        backgroundColor={palette.surfaceMuted}
-        title="Profile"
-        titleColor={palette.text}
-      >
+      <SectionCard title="Profile">
         <TextInput
           testID="form-name"
           placeholder="Name"
@@ -79,11 +75,7 @@ export default function Form() {
         />
       </SectionCard>
 
-      <SectionCard
-        backgroundColor={palette.surfaceMuted}
-        title="Preferences"
-        titleColor={palette.text}
-      >
+      <SectionCard title="Preferences">
         <View
           style={[
             styles.toggleRow,
@@ -112,26 +104,20 @@ export default function Form() {
         </View>
       </SectionCard>
 
-      <SectionCard backgroundColor={palette.surfaceMuted}>
+      <SectionCard>
         <ActionButton
           testID="form-submit"
           label="Submit"
           disabled={!canSubmit}
           onPress={handleSubmit}
-          backgroundColor={canSubmit ? palette.tint : palette.separator}
         />
 
         <StatusCard
           testID="form-status-card"
-          backgroundColor={palette.surface}
-          borderColor={palette.separator}
           label="Status"
-          labelColor={palette.secondaryText}
           value={submitted ? `Submitted: ${submittedName}` : "Ready"}
-          valueColor={palette.text}
           valueTestID="form-status"
           timestamp={timestamp}
-          timestampColor={palette.secondaryText}
           timestampTestID="form-timestamp"
         />
       </SectionCard>

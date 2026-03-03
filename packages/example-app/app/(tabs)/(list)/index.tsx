@@ -45,23 +45,16 @@ export default function List() {
       >
         <SectionCard
           testID="list-summary"
-          backgroundColor={palette.surfaceMuted}
           title="Items"
-          titleColor={palette.text}
           titleTestID="list-header"
           titleStyle={styles.summaryTitle}
           description="Search from the native header and scroll through a grouped list."
-          descriptionColor={palette.secondaryText}
           descriptionTestID="list-description"
           descriptionStyle={styles.summaryCopy}
         />
 
         <ListRowsCard
           testID="list-card"
-          backgroundColor={palette.surface}
-          rowBorderColor={palette.separator}
-          labelColor={palette.text}
-          metaColor={palette.secondaryText}
           rows={filtered.map((item) => ({
             id: item.id,
             label: item.label,

@@ -1,15 +1,17 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { useNativePalette } from "@/lib/native-ui";
+
 type MetricHeroCardProps = {
-  backgroundColor: string;
+  backgroundColor?: string;
   description: string;
-  descriptionColor: string;
+  descriptionColor?: string;
   eyebrow: string;
-  eyebrowColor: string;
-  shadowColor: string;
+  eyebrowColor?: string;
+  shadowColor?: string;
   testID?: string;
   value: number;
-  valueColor: string;
+  valueColor?: string;
 };
 
 export function MetricHeroCard({
@@ -23,13 +25,25 @@ export function MetricHeroCard({
   value,
   valueColor,
 }: MetricHeroCardProps) {
+  const palette = useNativePalette();
+
   return (
-    <View style={[styles.card, { backgroundColor, boxShadow: `0 16px 40px ${shadowColor}` }]}>
-      <Text style={[styles.eyebrow, { color: eyebrowColor }]}>{eyebrow}</Text>
-      <Text testID={testID} style={[styles.value, { color: valueColor }]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: backgroundColor ?? palette.surface,
+          boxShadow: `0 16px 40px ${shadowColor ?? palette.separator}`,
+        },
+      ]}
+    >
+      <Text style={[styles.eyebrow, { color: eyebrowColor ?? palette.secondaryText }]}>{eyebrow}</Text>
+      <Text testID={testID} style={[styles.value, { color: valueColor ?? palette.text }]}>
         {value}
       </Text>
-      <Text style={[styles.description, { color: descriptionColor }]}>{description}</Text>
+      <Text style={[styles.description, { color: descriptionColor ?? palette.secondaryText }]}>
+        {description}
+      </Text>
     </View>
   );
 }

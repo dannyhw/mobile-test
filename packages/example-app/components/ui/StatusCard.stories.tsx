@@ -5,14 +5,9 @@ import { StatusCard } from "./StatusCard";
 const meta = {
   component: StatusCard,
   args: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#D0D7DE",
     label: "Status",
-    labelColor: "#687076",
     value: "Submitted: Danny",
-    valueColor: "#11181C",
     timestamp: "10:34:18",
-    timestampColor: "#687076",
   },
 } satisfies Meta<typeof StatusCard>;
 

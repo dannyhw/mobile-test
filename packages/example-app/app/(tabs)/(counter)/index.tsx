@@ -22,36 +22,23 @@ export default function Counter() {
       ]}
     >
       <MetricHeroCard
-        backgroundColor={palette.surface}
-        shadowColor={palette.separator}
         eyebrow="Session taps"
-        eyebrowColor={palette.secondaryText}
         value={count}
-        valueColor={palette.text}
         description="Native controls, predictable state, clean screenshots."
-        descriptionColor={palette.secondaryText}
         testID="counter"
       />
 
-      <SectionCard
-        backgroundColor={palette.surfaceMuted}
-        title="Actions"
-        titleColor={palette.text}
-      >
+      <SectionCard title="Actions">
         <ActionButton
           testID="click-button"
           label="Increment"
           onPress={() => setCount((current) => current + 1)}
-          backgroundColor={palette.tint}
         />
 
         <ActionButton
           label="Reset"
           onPress={() => setCount(0)}
           variant="secondary"
-          backgroundColor={palette.surface}
-          borderColor={palette.separator}
-          textColor={palette.text}
         />
       </SectionCard>
     </ScrollView>

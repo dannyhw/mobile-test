@@ -1,16 +1,18 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { useNativePalette } from "@/lib/native-ui";
+
 type StatusCardProps = {
-  backgroundColor: string;
-  borderColor: string;
+  backgroundColor?: string;
+  borderColor?: string;
   label: string;
-  labelColor: string;
+  labelColor?: string;
   testID?: string;
   timestamp?: string;
   timestampColor?: string;
   timestampTestID?: string;
   value: string;
-  valueColor: string;
+  valueColor?: string;
   valueTestID?: string;
 };
 
@@ -27,14 +29,29 @@ export function StatusCard({
   valueColor,
   valueTestID,
 }: StatusCardProps) {
+  const palette = useNativePalette();
+  const resolvedLabelColor = labelColor ?? palette.secondaryText;
+
   return (
-    <View testID={testID} style={[styles.card, { backgroundColor, borderColor }]}>
-      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
-      <Text testID={valueTestID} style={[styles.value, { color: valueColor }]}>
+    <View
+      testID={testID}
+      style={[
+        styles.card,
+        {
+          backgroundColor: backgroundColor ?? palette.surface,
+          borderColor: borderColor ?? palette.separator,
+        },
+      ]}
+    >
+      <Text style={[styles.label, { color: resolvedLabelColor }]}>{label}</Text>
+      <Text testID={valueTestID} style={[styles.value, { color: valueColor ?? palette.text }]}>
         {value}
       </Text>
       {timestamp ? (
-        <Text testID={timestampTestID} style={[styles.timestamp, { color: timestampColor ?? labelColor }]}>
+        <Text
+          testID={timestampTestID}
+          style={[styles.timestamp, { color: timestampColor ?? resolvedLabelColor }]}
+        >
           {timestamp}
         </Text>
       ) : null}

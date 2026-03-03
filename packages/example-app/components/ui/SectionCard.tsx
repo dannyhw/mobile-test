@@ -1,8 +1,16 @@
 import { type ReactNode } from "react";
-import { type StyleProp, StyleSheet, Text, type TextStyle, View } from "react-native";
+import {
+  type StyleProp,
+  StyleSheet,
+  Text,
+  type TextStyle,
+  View,
+} from "react-native";
+
+import { useNativePalette } from "@/lib/native-ui";
 
 type SectionCardProps = {
-  backgroundColor: string;
+  backgroundColor?: string;
   children?: ReactNode;
   description?: string;
   descriptionColor?: string;
@@ -28,17 +36,36 @@ export function SectionCard({
   titleStyle,
   titleTestID,
 }: SectionCardProps) {
+  const palette = useNativePalette();
+
   return (
-    <View testID={testID} style={[styles.card, { backgroundColor }]}>
+    <View
+      testID={testID}
+      style={[
+        styles.card,
+        { backgroundColor: backgroundColor ?? palette.surfaceMuted },
+      ]}
+    >
       {title ? (
-        <Text testID={titleTestID} style={[styles.title, titleStyle, { color: titleColor ?? "#111" }]}>
+        <Text
+          testID={titleTestID}
+          style={[
+            styles.title,
+            titleStyle,
+            { color: titleColor ?? palette.text },
+          ]}
+        >
           {title}
         </Text>
       ) : null}
       {description ? (
         <Text
           testID={descriptionTestID}
-          style={[styles.description, descriptionStyle, { color: descriptionColor ?? "#444" }]}
+          style={[
+            styles.description,
+            descriptionStyle,
+            { color: descriptionColor ?? palette.secondaryText },
+          ]}
         >
           {description}
         </Text>

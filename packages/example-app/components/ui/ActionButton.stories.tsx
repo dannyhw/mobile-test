@@ -15,9 +15,6 @@ const meta = {
   args: {
     onPress: fn(),
     label: "Continue",
-    backgroundColor: "#0A84FF",
-    textColor: "#FFFFFF",
-    borderColor: "#D1D1D6",
   },
 } satisfies Meta<typeof ActionButton>;
 
@@ -29,8 +26,6 @@ export const Primary: Story = {};
 export const Secondary: Story = {
   args: {
     variant: "secondary",
-    backgroundColor: "#FFFFFF",
-    textColor: "#11181C",
   },
 };
 
@@ -38,6 +33,5 @@ export const Disabled: Story = {
   args: {
     disabled: true,
     label: "Submit",
-    backgroundColor: "#C7C7CC",
   },
 };

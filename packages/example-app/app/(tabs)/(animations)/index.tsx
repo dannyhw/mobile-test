@@ -47,11 +47,8 @@ export default function Animations() {
       ]}
     >
       <SectionCard
-        backgroundColor={palette.surfaceMuted}
         title="Preview"
-        titleColor={palette.text}
         description="Run a short native-driven animation and capture the settled frame."
-        descriptionColor={palette.secondaryText}
       >
         <Animated.View
           testID="anim-box"
@@ -73,7 +70,6 @@ export default function Animations() {
           testID="anim-trigger"
           label="Start animation"
           onPress={startAnimation}
-          backgroundColor={palette.tint}
         />
 
         <ActionButton
@@ -81,9 +77,6 @@ export default function Animations() {
           label="Reset"
           onPress={reset}
           variant="secondary"
-          backgroundColor={palette.surface}
-          borderColor={palette.separator}
-          textColor={palette.text}
         />
       </SectionCard>
     </ScrollView>

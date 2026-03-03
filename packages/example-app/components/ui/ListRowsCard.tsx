@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { useNativePalette } from "@/lib/native-ui";
+
 type ListRowItem = {
   accessibilityLabel?: string;
   id: number | string;
@@ -9,10 +11,10 @@ type ListRowItem = {
 };
 
 type ListRowsCardProps = {
-  backgroundColor: string;
-  labelColor: string;
-  metaColor: string;
-  rowBorderColor: string;
+  backgroundColor?: string;
+  labelColor?: string;
+  metaColor?: string;
+  rowBorderColor?: string;
   rows: ListRowItem[];
   testID?: string;
 };
@@ -25,8 +27,10 @@ export function ListRowsCard({
   rows,
   testID,
 }: ListRowsCardProps) {
+  const palette = useNativePalette();
+
   return (
-    <View testID={testID} style={[styles.card, { backgroundColor }]}>
+    <View testID={testID} style={[styles.card, { backgroundColor: backgroundColor ?? palette.surface }]}>
       {rows.map((row, index) => (
         <View
           key={row.id}
@@ -36,14 +40,14 @@ export function ListRowsCard({
             styles.row,
             index < rows.length - 1
               ? {
-                  borderBottomColor: rowBorderColor,
+                  borderBottomColor: rowBorderColor ?? palette.separator,
                   borderBottomWidth: StyleSheet.hairlineWidth,
                 }
               : null,
           ]}
         >
-          <Text style={[styles.label, { color: labelColor }]}>{row.label}</Text>
-          <Text style={[styles.meta, { color: metaColor }]}>{row.meta}</Text>
+          <Text style={[styles.label, { color: labelColor ?? palette.text }]}>{row.label}</Text>
+          <Text style={[styles.meta, { color: metaColor ?? palette.secondaryText }]}>{row.meta}</Text>
         </View>
       ))}
     </View>

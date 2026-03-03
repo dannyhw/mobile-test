@@ -1,3 +1,4 @@
+import { themeColors } from "@/lib/native-ui";
 import {
   DarkTheme,
   DefaultTheme,
@@ -11,10 +12,6 @@ import {
   useColorScheme,
 } from "react-native";
 
-function toNavigationColor(color: ColorValue) {
-  return color as string;
-}
-
 LogBox.ignoreAllLogs(true);
 
 const StorybookEnabled = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
@@ -22,25 +19,6 @@ const StorybookEnabled = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
 export const unstable_settings = {
   initialRouteName: StorybookEnabled ? "(storybook)/index" : "(tabs)",
 };
-
-const colors =
-  Platform.OS === "ios"
-    ? {
-        primary: toNavigationColor(Color.ios.systemBlue),
-        background: toNavigationColor(Color.ios.systemBackground),
-        card: toNavigationColor(Color.ios.secondarySystemBackground),
-        text: toNavigationColor(Color.ios.label),
-        border: toNavigationColor(Color.ios.separator),
-        notification: toNavigationColor(Color.ios.systemRed),
-      }
-    : {
-        primary: toNavigationColor(Color.android.dynamic.primary),
-        background: toNavigationColor(Color.android.dynamic.surface),
-        card: toNavigationColor(Color.android.dynamic.surfaceContainer),
-        text: toNavigationColor(Color.android.dynamic.onSurface),
-        border: toNavigationColor(Color.android.dynamic.outlineVariant),
-        notification: toNavigationColor(Color.android.dynamic.error),
-      };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -52,7 +30,7 @@ export default function RootLayout() {
         ...baseTheme,
         colors: {
           ...baseTheme.colors,
-          ...colors,
+          ...themeColors,
         },
       }}
     >

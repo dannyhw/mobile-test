@@ -1,6 +1,29 @@
 import { useTheme } from "@react-navigation/native";
 import { Color } from "expo-router";
-import { type ColorValue } from "react-native";
+import { Platform, type ColorValue } from "react-native";
+
+function toNavigationColor(color: ColorValue) {
+  return color as string;
+}
+
+export const themeColors =
+  Platform.OS === "ios"
+    ? {
+        primary: toNavigationColor(Color.ios.systemBlue),
+        background: toNavigationColor(Color.ios.systemBackground),
+        card: toNavigationColor(Color.ios.secondarySystemBackground),
+        text: toNavigationColor(Color.ios.label),
+        border: toNavigationColor(Color.ios.separator),
+        notification: toNavigationColor(Color.ios.systemRed),
+      }
+    : {
+        primary: toNavigationColor(Color.android.dynamic.primary),
+        background: toNavigationColor(Color.android.dynamic.surface),
+        card: toNavigationColor(Color.android.dynamic.surfaceContainer),
+        text: toNavigationColor(Color.android.dynamic.onSurface),
+        border: toNavigationColor(Color.android.dynamic.outlineVariant),
+        notification: toNavigationColor(Color.android.dynamic.error),
+      };
 
 function toColor(color: ColorValue) {
   return color as string;
