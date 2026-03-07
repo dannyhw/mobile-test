@@ -10,12 +10,22 @@ export interface WaitForAnimationOptions {
   interval?: number
 }
 
+export interface OpenUrlOptions {
+  path?: string
+  scheme?: string
+  url?: string
+}
+
+export interface LaunchOptions extends OpenUrlOptions {
+  bundleId?: string
+}
+
 export interface Device extends DeviceInfo {
-  launch(bundleId: string): Promise<void>
+  launch(bundleIdOrOptions?: string | LaunchOptions): Promise<void>
   terminate(bundleId: string): Promise<void>
   install(appPath: string): Promise<void>
   takeScreenshot(): Promise<Buffer>
-  openUrl(url: string): Promise<void>
+  openUrl(target: string | OpenUrlOptions): Promise<void>
   waitForAnimationToEnd(options?: WaitForAnimationOptions): Promise<void>
   hideKeyboard(): Promise<void>
   pressHome(): Promise<void>

@@ -2,12 +2,8 @@ import { by, device, element } from "mobile-test";
 import { describe, expect, it } from "vitest";
 
 describe("Animations", () => {
-  it("navigates to animations tab and runs animation", async () => {
-    await device.launch("com.dannyhw.exampleapp");
-    await device.waitForAnimationToEnd();
-
-    // Navigate to animations tab
-    await element(by.text("Animations")).tap();
+  it("launches directly to animations and runs animation", async () => {
+    await device.launch({ path: "/animations" });
     await device.waitForAnimationToEnd();
 
     // Verify initial state

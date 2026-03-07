@@ -1,5 +1,15 @@
+export interface IOSAppConfig {
+  bundleId?: string
+  scheme?: string
+}
+
 export interface AppConfig {
-  ios?: string
+  ios?: string | IOSAppConfig
+  android?: string
+}
+
+export interface ResolvedAppConfig {
+  ios?: IOSAppConfig
   android?: string
 }
 
@@ -26,7 +36,7 @@ export interface MobileTestConfig {
 }
 
 export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots' | 'logLevel'>> {
-  app: AppConfig
+  app: ResolvedAppConfig
   projects?: ProjectConfig[]
   screenshots: Required<ScreenshotConfig>
   logLevel: 'silent' | 'info' | 'debug'
@@ -45,8 +55,19 @@ const defaults = {
 } as const
 
 export function defineConfig(config: MobileTestConfig): ResolvedConfig {
+  const app: ResolvedAppConfig = {}
+  const iosConfig = config.app?.ios
+  if (typeof iosConfig === 'string') {
+    app.ios = { bundleId: iosConfig }
+  } else if (iosConfig) {
+    app.ios = { ...iosConfig }
+  }
+  if (config.app?.android) {
+    app.android = config.app.android
+  }
+
   return {
-    app: config.app ?? {},
+    app,
     projects: config.projects,
     screenshots: { ...defaults.screenshots, ...config.screenshots },
     timeout: config.timeout ?? defaults.timeout,

@@ -21,7 +21,9 @@ import { device, element, by } from 'mobile-test'
 
 describe('Login', () => {
   it('shows the welcome screen', async () => {
-    await device.launch('com.example.myapp')
+    await device.launch('com.example.myapp', {
+      url: 'myapp://welcome',
+    })
     await expect(device).toMatchScreenshot('welcome')
   })
 
@@ -143,8 +145,9 @@ class IOSDevice implements Device {
   udid: string
   name: string
 
-  async launch(bundleId: string): Promise<void>
+  async launch(bundleId: string, options?: { url?: string }): Promise<void>
     // xcrun simctl launch <udid> <bundleId>
+    // if options.url is set, follow launch with xcrun simctl openurl <udid> <url>
 
   async terminate(bundleId: string): Promise<void>
     // xcrun simctl terminate <udid> <bundleId>
@@ -186,7 +189,7 @@ The native component that runs on the simulator. This is the most critical piece
 | `POST` | `/typeText` | `{ text }` | `{ success: true }` | `RunnerDaemonProxy._XCT_sendString` or `XCUIElement.typeText` |
 | `GET` | `/screenshot` | — | PNG bytes | `XCUIScreen.main.screenshot().pngRepresentation` |
 | `GET` | `/viewHierarchy` | — | JSON element tree | `XCUIApplication.snapshot().dictionaryRepresentation` |
-| `POST` | `/launchApp` | `{ bundleId }` | `{ success: true }` | `XCUIApplication(bundleIdentifier:).launch()` |
+| `POST` | `/launchApp` | `{ bundleId, url? }` | `{ success: true }` | Launch app; if `url` is provided, open the deep link as part of startup |
 | `POST` | `/terminateApp` | `{ bundleId }` | `{ success: true }` | `XCUIApplication(bundleIdentifier:).terminate()` |
 
 #### Event Synthesis (Touch)
@@ -272,7 +275,7 @@ class DriverClient {
   async typeText(text: string): Promise<void>
   async screenshot(): Promise<Buffer>
   async viewHierarchy(): Promise<AXElement>
-  async launchApp(bundleId: string): Promise<void>
+  async launchApp(bundleId: string, options?: { url?: string }): Promise<void>
   async terminateApp(bundleId: string): Promise<void>
   async deviceInfo(): Promise<DeviceInfo>
 }

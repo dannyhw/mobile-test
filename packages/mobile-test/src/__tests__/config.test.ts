@@ -18,19 +18,35 @@ describe('defineConfig', () => {
     expect(config.projects).toBeUndefined()
   })
 
-  it('preserves user overrides', () => {
+  it('preserves legacy iOS bundle ID overrides', () => {
     const config = defineConfig({
       app: { ios: 'com.example.app' },
       timeout: 60_000,
       screenshots: { threshold: 0.5, dir: './snaps' },
     })
 
-    expect(config.app.ios).toBe('com.example.app')
+    expect(config.app.ios).toEqual({ bundleId: 'com.example.app' })
     expect(config.timeout).toBe(60_000)
     expect(config.actionTimeout).toBe(5_000) // still default
     expect(config.screenshots.threshold).toBe(0.5)
     expect(config.screenshots.dir).toBe('./snaps')
     expect(config.screenshots.antialiasing).toBe(true) // still default
+  })
+
+  it('supports structured iOS app config', () => {
+    const config = defineConfig({
+      app: {
+        ios: {
+          bundleId: 'com.example.app',
+          scheme: 'exampleapp',
+        },
+      },
+    })
+
+    expect(config.app.ios).toEqual({
+      bundleId: 'com.example.app',
+      scheme: 'exampleapp',
+    })
   })
 
   it('supports project targets', () => {

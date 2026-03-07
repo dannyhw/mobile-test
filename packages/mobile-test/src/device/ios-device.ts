@@ -1,9 +1,11 @@
 import { execaCommand } from 'execa'
-import type { Device, WaitForAnimationOptions } from './types.js'
+import type { Device, LaunchOptions, OpenUrlOptions, WaitForAnimationOptions } from './types.js'
 import type { DriverClient } from '../driver/client.js'
 import { getActiveBundleId, setActiveBundleId } from '../driver/context.js'
 import { compareBuffers } from '../screenshot/compare.js'
 import { log } from '../logger.js'
+import { resolveLaunchConfig, resolveOpenUrlConfig } from './launch-config.js'
+import { normalizeStatusBar } from '../screenshot/normalize.js'
 
 const KEYBOARD_POLL_INTERVAL = 100
 const KEYBOARD_HIDE_TIMEOUT = 2_000
@@ -21,8 +23,10 @@ export class IOSDevice implements Device {
     this.client = client
   }
 
-  async launch(bundleId: string): Promise<void> {
+  async launch(bundleIdOrOptions?: string | LaunchOptions): Promise<void> {
     return log.time('device.launch', async () => {
+      const { bundleId, url } = resolveLaunchConfig(bundleIdOrOptions)
+
       if (this.client) {
         try {
           await this.client.terminateApp(bundleId)
@@ -34,6 +38,13 @@ export class IOSDevice implements Device {
         await execaCommand(`xcrun simctl launch ${this.udid} ${bundleId}`)
       }
       setActiveBundleId(bundleId)
+
+      if (url) {
+        await this.openUrl(url)
+        return
+      }
+
+      await normalizeStatusBar(this.udid)
     })
   }
 
@@ -56,8 +67,15 @@ export class IOSDevice implements Device {
     return this.client.screenshot()
   }
 
-  async openUrl(url: string): Promise<void> {
-    await execaCommand(`xcrun simctl openurl ${this.udid} ${url}`)
+  async openUrl(target: string | OpenUrlOptions): Promise<void> {
+    const url = resolveOpenUrlConfig(target)
+
+    try {
+      await execaCommand(`xcrun simctl openurl ${this.udid} ${url}`)
+      await normalizeStatusBar(this.udid)
+    } catch (error) {
+      throw new Error(`Failed to open URL ${url} on simulator ${this.udid}.`, { cause: error })
+    }
   }
 
   async waitForAnimationToEnd(options?: WaitForAnimationOptions): Promise<void> {

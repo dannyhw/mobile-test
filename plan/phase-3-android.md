@@ -19,6 +19,7 @@ Mirror the iOS driver architecture:
 **Implementation:**
 - `adb devices` to detect connected emulators/devices
 - `adb install` / `adb shell am start` / `adb shell am force-stop` for app lifecycle
+- Support optional deep-link launch via `adb shell am start -a android.intent.action.VIEW -d <url>`
 - `adb shell screencap` for basic screenshots (fallback before driver is ready)
 
 **Files to create/modify:**
@@ -37,7 +38,7 @@ Kotlin UIAutomator instrumentation test that starts an HTTP server.
 - `POST /tap` — `UiDevice.click(x, y)`
 - `POST /swipe` — `UiDevice.swipe()`
 - `POST /typeText` — `UiDevice.pressKeyCode()` or instrumentation
-- `POST /launchApp` — `am start`
+- `POST /launchApp` — `am start` with optional deep-link URL
 - `POST /terminateApp` — `am force-stop`
 
 **Build & distribution:**
@@ -61,7 +62,10 @@ Kotlin UIAutomator instrumentation test that starts an HTTP server.
 ```typescript
 export default defineConfig({
   app: {
-    ios: 'com.example.myapp',
+    ios: {
+      bundleId: 'com.example.myapp',
+      scheme: 'myapp',
+    },
     android: 'com.example.myapp',
   },
   projects: [
