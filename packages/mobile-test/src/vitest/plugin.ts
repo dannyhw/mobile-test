@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import type { MobileTestConfig } from '../config.js'
+import { defineConfig, type MobileTestConfig } from '../config.js'
 
 /**
  * Find the mobile-test package root by walking up from this file
@@ -43,16 +43,15 @@ export function mobileTestPlugin(config?: MobileTestConfig) {
   return {
     name: 'mobile-test',
     config() {
-      if (config?.actionTimeout) {
-        process.env.__MOBILE_TEST_ACTION_TIMEOUT = String(config.actionTimeout)
-      }
-      if (config?.logLevel) {
-        process.env.__MOBILE_TEST_LOG_LEVEL = config.logLevel
-      }
-      if (config?.screenshots?.dir) {
-        process.env.__MOBILE_TEST_SCREENSHOTS_DIR = config.screenshots.dir
-      }
-      if (config?.screenshots?.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
+      const resolved = defineConfig(config ?? {})
+
+      process.env.__MOBILE_TEST_ACTION_TIMEOUT = String(resolved.actionTimeout)
+      process.env.__MOBILE_TEST_LOG_LEVEL = resolved.logLevel
+      process.env.__MOBILE_TEST_SCREENSHOTS_DIR = resolved.screenshots.dir
+      process.env.__MOBILE_TEST_IOS_BUNDLE_ID = resolved.app.ios?.bundleId ?? ''
+      process.env.__MOBILE_TEST_IOS_SCHEME = resolved.app.ios?.scheme ?? ''
+
+      if (resolved.screenshots.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
         process.env.UPDATE_SCREENSHOTS = 'true'
       }
 

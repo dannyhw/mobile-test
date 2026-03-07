@@ -20,11 +20,15 @@ if (!port || !deviceName || !deviceUdid) {
 const actionTimeout = process.env.__MOBILE_TEST_ACTION_TIMEOUT
 const logLevel = process.env.__MOBILE_TEST_LOG_LEVEL as 'silent' | 'info' | 'debug' | undefined
 const screenshotsDir = process.env.__MOBILE_TEST_SCREENSHOTS_DIR
-if (actionTimeout || logLevel || screenshotsDir) {
+const iosBundleId = process.env.__MOBILE_TEST_IOS_BUNDLE_ID
+const iosScheme = process.env.__MOBILE_TEST_IOS_SCHEME
+if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme) {
   setTestConfig({
     ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
     ...(logLevel ? { logLevel } : {}),
     ...(screenshotsDir ? { screenshotsDir } : {}),
+    ...(iosBundleId ? { iosBundleId } : {}),
+    ...(iosScheme ? { iosScheme } : {}),
   })
 }
 if (logLevel) {

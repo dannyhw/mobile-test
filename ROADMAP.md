@@ -53,7 +53,9 @@ The single most important finding is how Maestro achieves zero-config:
 │  User Test Code (TypeScript)                     │
 │  describe('Login', () => {                       │
 │    it('shows welcome screen', async () => {      │
-│      await device.launch('com.myapp')            │
+│      await device.launch({                       │
+│        path: '/welcome'                          │
+│      })                                          │
 │      await expect(screen).toMatchScreenshot()    │
 │    })                                            │
 │  })                                              │
@@ -99,7 +101,9 @@ import { device, by, element } from 'mobile-test'
 
 describe('Login Flow', () => {
   it('should show welcome screen', async () => {
-    await device.launch('com.example.myapp')
+    await device.launch({
+      path: '/welcome',
+    })
 
     // Take and compare screenshot
     await expect(device).toMatchScreenshot('welcome-screen')
@@ -160,9 +164,12 @@ await element(by.id('list')).scrollTo(element(by.id('item-50')))
 await element(by.id('card')).swipe('left')
 
 // Device-level
+await device.launch()
+await device.launch({ path: '/form' })  // uses configured scheme
+await device.launch({ bundleId: 'com.example.otherapp', url: 'otherapp://deep-link' })
 await device.pressBack()        // Android back
 await device.pressHome()
-await device.openUrl('myapp://deep-link')
+await device.openUrl({ path: '/form' })  // uses configured scheme
 await device.setLocation(37.7749, -122.4194)
 ```
 
@@ -175,7 +182,7 @@ await expect(element(by.id('title'))).toHaveText('Welcome')
 await expect(element(by.id('title'))).not.toBeVisible()
 await expect(element(by.id('button'))).toBeEnabled()
 
-// Screenshot assertions - the main attraction
+// Screenshot assertions - built-in and important
 await expect(device).toMatchScreenshot('screen-name')
 await expect(device).toMatchScreenshot('screen-name', {
   threshold: 0.1,                  // color difference sensitivity (0-1)
@@ -197,7 +204,10 @@ import { defineConfig } from 'mobile-test'
 export default defineConfig({
   // App configuration
   app: {
-    ios: 'com.example.myapp',        // bundle ID (or path to .app)
+    ios: {
+      bundleId: 'com.example.myapp',
+      scheme: 'myapp',
+    },
     android: 'com.example.myapp',    // package name (or path to .apk)
   },
 
@@ -255,8 +265,10 @@ Key commands:
 - `xcrun simctl boot "iPhone 16"` — boot simulator
 - `xcrun simctl install booted /path/to/app.app` — install app
 - `xcrun simctl launch booted com.example.app` — launch app
+- `xcrun simctl openurl booted myapp://deep-link` — open a deep link after launch when requested
 - `adb install /path/to/app.apk` — install on Android
 - `adb shell am start -n com.example.app/.MainActivity` — launch on Android
+- `adb shell am start -a android.intent.action.VIEW -d myapp://deep-link` — launch via deep link on Android
 
 ### 2. Driver Apps (Swift / Kotlin)
 

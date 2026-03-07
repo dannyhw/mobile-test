@@ -2,7 +2,6 @@ import { buildIndex } from "@storybook/react-native/node";
 import { device } from "mobile-test";
 import { describe, expect, it } from "vitest";
 
-const APP_BUNDLE_ID = "com.dannyhw.exampleapp";
 const STORYBOOK_CONFIG_PATH = ".rnstorybook";
 const STORYBOOK_CHANNEL_URL = "http://localhost:7007/send-event";
 const STORY_SETTLE_DELAY_MS = 30;
@@ -62,7 +61,7 @@ describe("Storybook", () => {
     const storyIds = await getStoryIds();
     expect(storyIds.length).toBeGreaterThan(0);
 
-    await device.launch(APP_BUNDLE_ID);
+    await device.launch({ path: "/storybook" });
     await device.waitForAnimationToEnd();
 
     for (const [index, storyId] of storyIds.entries()) {

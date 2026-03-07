@@ -17,6 +17,8 @@ const defaults = {
   screenshotMaxDiffPercentage: 0,
   screenshotAntialiasing: true,
   logLevel: 'info' as 'silent' | 'info' | 'debug',
+  iosBundleId: undefined as string | undefined,
+  iosScheme: undefined as string | undefined,
 }
 
 function getConfig() {
@@ -40,6 +42,14 @@ export function getScreenshotsDir(): string {
 
 export function getLogLevel(): 'silent' | 'info' | 'debug' {
   return getConfig().logLevel
+}
+
+export function getIOSAppConfig() {
+  const config = getConfig()
+  return {
+    bundleId: config.iosBundleId,
+    scheme: config.iosScheme,
+  }
 }
 
 export function getScreenshotDefaults() {

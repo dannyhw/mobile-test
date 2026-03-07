@@ -3,12 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("Counter App", () => {
   it("shows the initial screen", async () => {
-    await device.launch("com.dannyhw.exampleapp");
-
-    await device.waitForAnimationToEnd();
-
-    // Ensure we are on the counter tab even if tab state persisted from a prior run.
-    await element(by.text("Counter")).tap();
+    await device.launch({ path: "/counter" });
     await device.waitForAnimationToEnd();
 
     // Verify the counter screen is visible.
@@ -19,7 +14,7 @@ describe("Counter App", () => {
   });
 
   it("increments the counter on tap", async () => {
-    await element(by.text("Counter")).tap();
+    await device.launch({ path: "/counter" });
     await device.waitForAnimationToEnd();
 
     await element(by.id("counter-scroll")).scrollTo(element(by.id("click-button")));

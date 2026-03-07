@@ -2,12 +2,8 @@ import { by, device, element } from "mobile-test";
 import { describe, expect, it } from "vitest";
 
 describe("List", () => {
-  it("navigates to list tab and scrolls through the current list overview", async () => {
-    await device.launch("com.dannyhw.exampleapp");
-    await device.waitForAnimationToEnd();
-
-    // Navigate to list tab
-    await element(by.text("List")).tap();
+  it("launches directly to list and scrolls through the current list overview", async () => {
+    await device.launch({ path: "/list" });
     await device.waitForAnimationToEnd();
 
     // Verify the current list summary and first item state

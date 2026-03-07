@@ -5,6 +5,12 @@ import { mobileTestPlugin } from "mobile-test";
 export default defineConfig({
   plugins: [
     mobileTestPlugin({
+      app: {
+        ios: {
+          bundleId: "com.dannyhw.exampleapp",
+          scheme: "exampleapp",
+        },
+      },
       logLevel: "debug",
       screenshots: { dir: "./.screenshots" },
     }),
