@@ -4,6 +4,8 @@
 
 The core idea is simple: use the native automation tools that already exist on iOS and Android, wrap them in a small TypeScript-first test API, and make screenshot assertions part of the normal test flow instead of an afterthought.
 
+Keeping the framework mostly in TypeScript matters for more than just familiarity. It should make the tool easier to inspect, extend, and adapt without asking users to step into a large JVM codebase or a highly specialised DSL when they need custom behaviour.
+
 This repo is not trying to invent mobile automation from scratch, and it is not trying to claim that existing tools are wrong. It exists because the current tools tend to force a tradeoff:
 
 - simple setup, but a non-TypeScript authoring model
@@ -17,6 +19,7 @@ The project is meant to explore whether we can get a better balance of those tra
 The goals in this repo are:
 
 - a TypeScript API that feels familiar to people using Vitest, Playwright, or Detox
+- most framework logic in TypeScript so it is easier to extend, debug, and customize
 - Vitest as the test runner, rather than a separate custom runner
 - no custom build of the app under test
 - no app changes beyond sensible accessibility labels or test IDs
@@ -27,24 +30,24 @@ The goals in this repo are:
 In practice, that means tests should look more like this:
 
 ```ts
-import { describe, it, expect } from 'vitest'
-import { device, element, by } from 'mobile-test'
+import { describe, it, expect } from "vitest";
+import { device, element, by } from "mobile-test";
 
-describe('Login flow', () => {
-  it('shows the welcome screen', async () => {
-    await device.launch('com.example.myapp')
-    await expect(device).toMatchScreenshot('welcome')
-  })
+describe("Login flow", () => {
+  it("shows the welcome screen", async () => {
+    await device.launch("com.example.myapp");
+    await expect(device).toMatchScreenshot("welcome");
+  });
 
-  it('logs in successfully', async () => {
-    await element(by.id('email')).type('user@example.com')
-    await element(by.id('password')).type('secret')
-    await element(by.id('login-button')).tap()
+  it("logs in successfully", async () => {
+    await element(by.id("email")).type("user@example.com");
+    await element(by.id("password")).type("secret");
+    await element(by.id("login-button")).tap();
 
-    await expect(element(by.text('Welcome back'))).toBeVisible()
-    await expect(device).toMatchScreenshot('home')
-  })
-})
+    await expect(element(by.text("Welcome back"))).toBeVisible();
+    await expect(device).toMatchScreenshot("home");
+  });
+});
 ```
 
 ## Why This Exists
@@ -56,7 +59,7 @@ The motivation in the repo docs is consistent:
 - Appium and WebdriverIO are flexible and mature, but they bring more infrastructure and abstraction than this repo is aiming for.
 - Owl is close in spirit on screenshot testing, especially for React Native, but it takes a different approach and does not cover the exact target here.
 
-The project goal is not "beat all of them". It is narrower: learn from them and build a simpler tool for a specific shape of problem.
+The project goal is not "beat all of them". It is narrower: learn from them and build a simpler tool for a specific shape of problem, with a host-side implementation that stays in TypeScript wherever possible so teams can change it to fit their own workflow.
 
 ## Approach
 
@@ -113,5 +116,3 @@ This project is aiming for a practical middle ground:
 - higher-level than raw simulator and adb commands
 - lower-level and simpler than a very broad automation platform
 - focused on app interaction plus screenshot confidence, not every possible testing feature
-
-If that sounds narrower than a general-purpose E2E platform, that is intentional.
