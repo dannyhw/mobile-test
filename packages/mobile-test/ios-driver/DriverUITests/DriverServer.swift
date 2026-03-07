@@ -39,6 +39,7 @@ struct DriverServer {
         await server.appendRoute(HTTPRoute("typeText"), to: TypeTextHandler())
         await server.appendRoute(HTTPRoute("pressKey"), to: PressKeyHandler())
         await server.appendRoute(HTTPRoute("eraseText"), to: EraseTextHandler())
+        await server.appendRoute(HTTPRoute("clearText"), to: ClearTextHandler())
 
         // View hierarchy
         await server.appendRoute(HTTPRoute("viewHierarchy"), to: ViewHierarchyHandler())

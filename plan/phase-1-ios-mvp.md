@@ -759,3 +759,30 @@ Local file paths and URLs to reference during implementation. Organized by miles
 - `research/playwright-vitest-api-patterns.md` — API design patterns to adopt
 - `research/odiff-research.md` — odiff API and benchmarks
 - `research/synthesis-and-approach.md` — overall architecture and approach
+
+---
+
+## Checklist
+
+### Overall Status
+
+- [x] Step 1: Project scaffolding
+- [x] Step 2: iOS device detection and management
+- [x] Step 3: iOS driver
+- [x] Step 4: TypeScript client API
+- [x] Step 5: Screenshot comparison
+- [x] Step 6: Vitest integration
+- [x] Phase 1 validation complete
+
+### Current Stage
+
+- [x] Phase 1 complete
+- [x] Core iOS simulator flow working end to end
+- [x] Later Phase 2 work has extended the original MVP
+
+### Verification Snapshot
+
+- [x] Booted simulator auto-detection in place
+- [x] Driver build/install/start path implemented
+- [x] Element actions and basic assertions implemented
+- [x] Screenshot baseline workflow implemented

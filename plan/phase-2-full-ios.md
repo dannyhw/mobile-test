@@ -84,13 +84,15 @@ element(by.id('item').withAncestor(by.id('list')))   // scoped search
 await element(by.id('button')).doubleTap()
 await element(by.id('input')).replaceText('new text')
 await element(by.id('list')).scrollTo(element(by.id('item-50')))
+await element(by.id('input')).clear()
 await device.pressHome()
 await device.setLocation(37.7749, -122.4194)
 ```
 
 **Implementation:**
 - `doubleTap()` — two rapid taps via driver
-- `replaceText()` — select all + type
+- `replaceText()` — clear then type replacement text
+- `clear()` — native driver-backed clear operation with fallback chain and verification
 - `scrollTo()` — scroll until target element is visible
 - Device actions — `xcrun simctl` commands
 
@@ -98,7 +100,7 @@ await device.setLocation(37.7749, -122.4194)
 - `src/element/element.ts` — new action methods
 - `src/device/ios-device.ts` — `pressHome()`, `setLocation()`
 - `src/driver/client.ts` — new endpoints if needed
-- iOS driver Swift code — `doubleTap` endpoint if needed
+- iOS driver Swift code — `doubleTap` / `clearText` endpoints if needed
 
 ### M5: Wait for Animations
 
@@ -106,14 +108,12 @@ Detect when the screen has stopped changing, so tests can wait for animations to
 
 **API:**
 ```typescript
-// Explicit wait — call when you know an animation is in progress
 await device.waitForAnimationToEnd()
 
-// With options
 await device.waitForAnimationToEnd({
-  timeout: 5000,            // max wait time (default: 5000ms)
-  threshold: 0.5,           // % pixel diff to consider "settled" (default: 0.5)
-  interval: 200,            // time between checks (default: 200ms)
+  timeout: 5000,
+  threshold: 0.5,
+  interval: 200,
 })
 ```
 
@@ -123,8 +123,6 @@ await device.waitForAnimationToEnd({
 3. Take another screenshot
 4. Compare them with odiff — if diff is below `threshold` %, the screen is settled
 5. If not settled, repeat from step 2 until `timeout`
-
-This is the same approach Maestro uses (`waitForAppToSettle`). The 0.5% default threshold allows for minor sub-pixel rendering differences while catching real animation/layout changes.
 
 **Implementation:**
 - Add `waitForAnimationToEnd()` method to `Device` interface and `IOSDevice`
@@ -153,16 +151,46 @@ await expect(element(by.id('input'))).toHaveValue('hello')
 
 **Files to modify:**
 - `src/expect/matchers.ts` — new matchers
-- `src/element/types.ts` — ensure `enabled` field is in ElementHandle
+- `src/element/types.ts` — ensure `enabled` field is in `ElementHandle`
 - `matchers.d.ts` — type declarations
 
 ---
 
 ## Implementation Order
 
-1. M1: Region masking (highest value — unblocks real-world screenshot testing)
+1. M1: Region masking
 2. M2: Element-level screenshots
-3. M5: Wait for animations (high value — eliminates flaky sleep() calls)
+3. M5: Wait for animations
 4. M3: Additional locators
 5. M4: Additional actions
 6. M6: Additional assertions
+
+---
+
+## Checklist
+
+### Overall Status
+
+- [x] M1: Region masking for screenshots
+- [x] M2: Element-level screenshots
+- [x] M3: Additional locators
+- [x] M4: Additional actions
+- [x] M5: Wait for animations
+- [x] M6: Additional assertions
+- [x] Phase 2 validation complete
+
+### Current Stage
+
+- [x] Native driver-backed `element.clear()` implemented
+- [x] TypeScript API wired to the driver endpoint
+- [x] Unit coverage added for clear behavior
+- [x] Example app e2e validation added on `/form`
+- [x] Screenshot regression check rerun on `/counter`
+
+### Verification Run
+
+- [x] `packages/mobile-test`: `bun run build`
+- [x] `packages/mobile-test/ios-driver`: `./build.sh`
+- [x] `packages/mobile-test`: `bun run test`
+- [x] `packages/example-app`: `bunx vitest run e2e/form.test.ts`
+- [x] `packages/example-app`: `bunx vitest run e2e/counter.test.ts`
