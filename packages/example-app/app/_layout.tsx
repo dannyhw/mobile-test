@@ -4,13 +4,8 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Color, Stack } from "expo-router";
-import {
-  type ColorValue,
-  LogBox,
-  Platform,
-  useColorScheme,
-} from "react-native";
+import { Stack } from "expo-router";
+import { LogBox, useColorScheme } from "react-native";
 
 LogBox.ignoreAllLogs(true);
 
