@@ -19,6 +19,7 @@ The project is meant to explore whether we can get a better balance of those tra
 The goals in this repo are:
 
 - a TypeScript API that feels familiar to people using Vitest, Playwright, or Detox
+  - selectors directly copy detox syntax currently
 - most framework logic in TypeScript so it is easier to extend, debug, and customize
 - Vitest as the test runner, rather than a separate custom runner
 - no custom build of the app under test
