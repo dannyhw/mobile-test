@@ -1,5 +1,7 @@
 export { device } from './device/index.js'
 export { setDevice } from './device/index.js'
+export { AndroidDevice } from './device/android-device.js'
+export { IOSDevice } from './device/ios-device.js'
 export { element } from './element/element.js'
 export { by } from './element/by.js'
 export { defineConfig } from './config.js'

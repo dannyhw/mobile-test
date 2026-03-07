@@ -22,13 +22,15 @@ const logLevel = process.env.__MOBILE_TEST_LOG_LEVEL as 'silent' | 'info' | 'deb
 const screenshotsDir = process.env.__MOBILE_TEST_SCREENSHOTS_DIR
 const iosBundleId = process.env.__MOBILE_TEST_IOS_BUNDLE_ID
 const iosScheme = process.env.__MOBILE_TEST_IOS_SCHEME
-if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme) {
+const androidAppId = process.env.__MOBILE_TEST_ANDROID_APP_ID
+if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId) {
   setTestConfig({
     ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
     ...(logLevel ? { logLevel } : {}),
     ...(screenshotsDir ? { screenshotsDir } : {}),
     ...(iosBundleId ? { iosBundleId } : {}),
     ...(iosScheme ? { iosScheme } : {}),
+    ...(androidAppId ? { androidAppId } : {}),
   })
 }
 if (logLevel) {

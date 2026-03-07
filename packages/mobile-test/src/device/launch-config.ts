@@ -1,4 +1,4 @@
-import { getIOSAppConfig } from '../config-context.js'
+import { getAndroidAppConfig, getIOSAppConfig } from '../config-context.js'
 import type { LaunchOptions, OpenUrlOptions } from './types.js'
 
 function normalizePath(path: string): string {
@@ -11,7 +11,8 @@ function normalizePath(path: string): string {
 
 function resolveDeepLinkUrl(
   options: OpenUrlOptions,
-  defaults: ReturnType<typeof getIOSAppConfig>,
+  defaults: { scheme?: string },
+  missingSchemeMessage: string,
   { allowEmpty }: { allowEmpty: boolean },
 ): string | undefined {
   if (options.url && options.path) {
@@ -25,9 +26,7 @@ function resolveDeepLinkUrl(
   if (options.path) {
     const scheme = options.scheme ?? defaults.scheme
     if (!scheme) {
-      throw new Error(
-        'No iOS URL scheme configured. Configure app.ios.scheme or pass { scheme }.'
-      )
+      throw new Error(missingSchemeMessage)
     }
 
     return `${scheme}://${normalizePath(options.path)}`
@@ -55,12 +54,56 @@ export function resolveLaunchConfig(
 
   return {
     bundleId,
-    url: resolveDeepLinkUrl(options, defaults, { allowEmpty: true }),
+    url: resolveDeepLinkUrl(
+      options,
+      defaults,
+      'No iOS URL scheme configured. Configure app.ios.scheme or pass { scheme }.',
+      { allowEmpty: true },
+    ),
   }
 }
 
 export function resolveOpenUrlConfig(input: string | OpenUrlOptions): string {
   const defaults = getIOSAppConfig()
   const options = typeof input === 'string' ? { url: input } : input
-  return resolveDeepLinkUrl(options, defaults, { allowEmpty: false })!
+  return resolveDeepLinkUrl(
+    options,
+    defaults,
+    'No iOS URL scheme configured. Configure app.ios.scheme or pass { scheme }.',
+    { allowEmpty: false },
+  )!
+}
+
+export function resolveAndroidLaunchConfig(
+  input?: string | LaunchOptions,
+): { bundleId: string, url?: string } {
+  const defaults = getAndroidAppConfig()
+  const options = typeof input === 'string' ? { bundleId: input } : (input ?? {})
+  const bundleId = options.bundleId ?? defaults.appId
+
+  if (!bundleId) {
+    throw new Error(
+      'No Android app ID configured. Configure app.android or pass a bundle ID override.'
+    )
+  }
+
+  return {
+    bundleId,
+    url: resolveDeepLinkUrl(
+      options,
+      { scheme: undefined },
+      'No Android URL scheme configured. Pass a full URL or provide { scheme } with { path }.',
+      { allowEmpty: true },
+    ),
+  }
+}
+
+export function resolveAndroidOpenUrlConfig(input: string | OpenUrlOptions): string {
+  const options = typeof input === 'string' ? { url: input } : input
+  return resolveDeepLinkUrl(
+    options,
+    { scheme: undefined },
+    'No Android URL scheme configured. Pass a full URL or provide { scheme } with { path }.',
+    { allowEmpty: false },
+  )!
 }

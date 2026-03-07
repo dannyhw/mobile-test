@@ -49,6 +49,16 @@ describe('defineConfig', () => {
     })
   })
 
+  it('preserves Android app config', () => {
+    const config = defineConfig({
+      app: {
+        android: 'com.example.android',
+      },
+    })
+
+    expect(config.app.android).toBe('com.example.android')
+  })
+
   it('supports project targets', () => {
     const config = defineConfig({
       projects: [
