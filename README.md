@@ -122,12 +122,11 @@ This project is aiming for a practical middle ground:
 
 This is a rough comparison of the tools that shaped the direction of the project. It is meant as a practical summary of tradeoffs, not a scorecard.
 
-| Tool | Test runner / authoring model | TypeScript-first authoring | Uses native platform tooling | Custom build required | Built-in screenshot comparison | Broad interaction API (`tap`, `type`, `scroll`, `swipe`, etc.) | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| mobile-test | Vitest | Yes | Yes | No | Yes | Yes | The target is a familiar TypeScript API with screenshot testing built into the normal flow |
-| Maestro | Maestro CLI + YAML flows | No | Yes | No | Basic | Yes | Strong inspiration for the driver-app approach and low-setup model |
-| Detox | Usually Jest, but configurable | Yes | Yes | Yes | No | Yes | Strong API model, but setup depends on integrating Detox into the app build |
-| Appium / WebDriverIO | WebdriverIO runner, usually Mocha / Jasmine / Cucumber | Yes | Yes | No | Partial | Yes | Flexible and mature, but usually heavier in setup and architecture |
-| Owl | Jest | Yes | Partial | Partial | Yes | Partial | Close in spirit on screenshot workflows, especially for React Native |
+| Tool                 | Test runner / authoring model                          | TypeScript-first authoring | Uses native platform tooling | Custom build required | Built-in screenshot comparison | Broad interaction API | Notes                                                                                      |
+| -------------------- | ------------------------------------------------------ | -------------------------- | ---------------------------- | --------------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------ |
+| mobile-test          | Vitest                                                 | Yes                        | Yes                          | No                    | Yes                            | Yes                   | The target is a familiar TypeScript API with screenshot testing built into the normal flow |
+| Maestro              | Maestro CLI + YAML flows                               | No                         | Yes                          | No                    | Basic                          | Yes                   | Strong inspiration for the driver-app approach and low-setup model                         |
+| Detox                | Usually Jest, but configurable                         | Yes                        | Yes                          | Yes                   | No                             | Yes                   | Strong API model, but setup depends on integrating Detox into the app build                |
+| Appium / WebDriverIO | WebdriverIO runner, usually Mocha / Jasmine / Cucumber | Yes                        | Yes                          | No                    | Partial                        | Yes                   | Flexible and mature, but usually heavier in setup and architecture                         |
 
 The details behind this table are documented in [`research/`](./research/) and [`PROJECT_REQUIREMENTS_AND_CONTEXT.md`](./PROJECT_REQUIREMENTS_AND_CONTEXT.md).
