@@ -35,21 +35,21 @@ If this approach proves unreliable in e2e runs, revisit the driver `/launchApp` 
 
 ### 1. Config shape and API contract
 
-- [ ] Design config-backed iOS app settings instead of a bare `app.ios` string
-- [ ] Prefer a nested shape that can carry both bundle ID and scheme, e.g.:
+- [x] Design config-backed iOS app settings instead of a bare `app.ios` string
+- [x] Prefer a nested shape that can carry both bundle ID and scheme, e.g.:
   - `app.ios.bundleId`
   - `app.ios.scheme`
-- [ ] Decide the launch API so tests can omit the bundle ID when config is present
-- [ ] Prefer structured launch/open-link options over string parsing, e.g.:
+- [x] Decide the launch API so tests can omit the bundle ID when config is present
+- [x] Prefer structured launch/open-link options over string parsing, e.g.:
   - `device.launch()`
   - `device.launch({ path: '/form' })`
   - `device.launch({ url: 'myapp://form' })`
   - `device.launch({ bundleId: 'com.example.otherapp', scheme: 'otherapp', path: '/form' })`
-- [ ] Decide whether `openUrl()` should accept the same structured options or whether a separate helper name is clearer
-- [ ] Keep explicit per-call overrides available for unusual cases
-- [ ] Update `src/device/types.ts` so launch supports the config-default flow
-- [ ] Keep this milestone iOS-focused; do not broaden the implementation to Android yet
-- [ ] Document the intended behavior in code comments or nearby docs:
+- [x] Decide whether `openUrl()` should accept the same structured options or whether a separate helper name is clearer
+- [x] Keep explicit per-call overrides available for unusual cases
+- [x] Update `src/device/types.ts` so launch supports the config-default flow
+- [x] Keep this milestone iOS-focused; do not broaden the implementation to Android yet
+- [x] Document the intended behavior in code comments or nearby docs:
   - resolve bundle ID and scheme from config by default
   - allow per-call override of configured values
   - launch app normally when no URL is provided
@@ -60,19 +60,19 @@ If this approach proves unreliable in e2e runs, revisit the driver `/launchApp` 
 
 ### 2. Config plumbing
 
-- [ ] Update `src/config.ts` types to represent iOS bundle ID + scheme cleanly
-- [ ] Preserve backward compatibility if practical:
+- [x] Update `src/config.ts` types to represent iOS bundle ID + scheme cleanly
+- [x] Preserve backward compatibility if practical:
   - accept the existing `app.ios: string` form as shorthand for bundle ID
   - normalize it into the resolved config shape
-- [ ] Extend `src/config-context.ts` so workers can read the resolved iOS app defaults
-- [ ] Pass the relevant app config through the vitest plugin/setup path
-- [ ] Add a small shared resolver for structured launch/open-link input:
+- [x] Extend `src/config-context.ts` so workers can read the resolved iOS app defaults
+- [x] Pass the relevant app config through the vitest plugin/setup path
+- [x] Add a small shared resolver for structured launch/open-link input:
   - config supplies default `bundleId` and `scheme`
   - `path` composes a full URL from `scheme + path`
   - `url` is treated as already complete
   - explicit `bundleId` / `scheme` overrides config
   - invalid combinations fail with clear errors
-- [ ] Add config tests covering:
+- [x] Add config tests covering:
   - empty config
   - legacy string form
   - nested iOS object form
@@ -80,17 +80,17 @@ If this approach proves unreliable in e2e runs, revisit the driver `/launchApp` 
 
 ### 3. iOS implementation
 
-- [ ] Update `src/device/ios-device.ts` so `launch()` can use configured bundle ID by default
-- [ ] Support a structured launch call shape that can override config when needed
-- [ ] Preserve the current launch flow:
+- [x] Update `src/device/ios-device.ts` so `launch()` can use configured bundle ID by default
+- [x] Support a structured launch call shape that can override config when needed
+- [x] Preserve the current launch flow:
   - terminate existing app instance when the driver client is connected
   - launch via `client.launchApp(bundleId)` when the driver is present
   - otherwise fall back to `xcrun simctl launch`
-- [ ] After a successful launch, call the open-link path when `path` or `url` is provided
-- [ ] Compose the final deep-link URL from structured overrides before calling `simctl openurl`
-- [ ] Keep `setActiveBundleId(bundleId)` behavior intact for follow-up element queries
-- [ ] Avoid adding fixed sleeps unless e2e proves they are necessary
-- [ ] Improve the failure surface when config is missing or incomplete:
+- [x] After a successful launch, call the open-link path when `path` or `url` is provided
+- [x] Compose the final deep-link URL from structured overrides before calling `simctl openurl`
+- [x] Keep `setActiveBundleId(bundleId)` behavior intact for follow-up element queries
+- [x] Avoid adding fixed sleeps unless e2e proves they are necessary
+- [x] Improve the failure surface when config is missing or incomplete:
   - clear error if no bundle ID is configured and none is passed
   - clear error if `path` is given and no scheme is available from config or override
   - clear error for ambiguous or invalid override combinations
@@ -98,43 +98,44 @@ If this approach proves unreliable in e2e runs, revisit the driver `/launchApp` 
 
 ### 4. Tests
 
-- [ ] Add unit coverage for launch behavior with config defaults
-- [ ] Add unit coverage for override precedence:
+- [x] Add unit coverage for launch behavior with config defaults
+- [x] Add unit coverage for override precedence:
   - explicit bundle ID overrides configured bundle ID
   - explicit scheme overrides configured scheme
   - explicit URL overrides any scheme/path composition
-- [ ] Add unit coverage for the iOS deep-link path:
+- [x] Add unit coverage for the iOS deep-link path:
   - with driver client attached
   - without driver client attached
   - without `path` or `url` to confirm normal launch behavior is unchanged
   - without configured bundle ID to confirm the error is actionable
-- [ ] Add unit coverage for structured deep-link resolution:
+- [x] Add unit coverage for structured deep-link resolution:
   - configured scheme + `path: '/form'`
   - explicit `scheme` + `path: '/form'`
   - explicit `url`
   - missing scheme + `path: '/form'`
   - invalid `url` + `path` combination
-- [ ] If there is no focused device test file yet, add one under `src/__tests__/` for `IOSDevice`
-- [ ] Mock shell execution so tests assert `simctl openurl` is called only when a URL is provided
+- [x] If there is no focused device test file yet, add one under `src/__tests__/` for `IOSDevice`
+- [x] Mock shell execution so tests assert `simctl openurl` is called only when a URL is provided
 
 ### 5. Example-app proving path
 
-- [ ] Configure `mobileTestPlugin()` in the example app with iOS bundle ID and scheme instead of hardcoding them in each test
-- [ ] Update the package e2e tests to launch without repeating the bundle ID in each file
-- [ ] Pick a stable deep-link destination in `example-app`
-- [ ] Prefer reusing an existing route/screen if it gives a clean assertion target
-- [ ] If the current routes are awkward for a deterministic test, add a minimal deep-link-specific target with obvious test IDs
-- [ ] Add or update package-level e2e coverage in `e2e/example-app.test.ts` so it launches from config defaults and also proves a structured deep-link override such as `{ path: '/form' }`
-- [ ] Update at least one consumer-facing example to show the override path when a test needs a non-default app or URL
+- [x] Configure `mobileTestPlugin()` in the example app with iOS bundle ID and scheme instead of hardcoding them in each test
+- [x] Update the package e2e tests to launch without repeating the bundle ID in each file
+- [x] Pick a stable deep-link destination in `example-app`
+- [x] Prefer reusing an existing route/screen if it gives a clean assertion target
+- [x] If the current routes are awkward for a deterministic test, add a minimal deep-link-specific target with obvious test IDs
+  Not needed after the router exposed stable direct routes like `/form` and `/storybook`.
+- [x] Add or update package-level e2e coverage in `e2e/example-app.test.ts` so it launches from config defaults and also proves a structured deep-link override such as `{ path: '/form' }`
+- [x] Update at least one consumer-facing example to show the override path when a test needs a non-default app or URL
 
 ### 6. Verification
 
-- [ ] Run `bun run build`
-- [ ] Run `bun run test`
-- [ ] Run the relevant iOS e2e coverage against a booted simulator
-- [ ] Confirm launch works when app identity comes only from config
-- [ ] Confirm explicit per-call bundle ID / URL overrides still work
-- [ ] Confirm the non-deep-link launch path still passes after the API change
+- [x] Run `bun run build`
+- [x] Run `bun run test`
+- [x] Run the relevant iOS e2e coverage against a booted simulator
+- [x] Confirm launch works when app identity comes only from config
+- [x] Confirm explicit per-call bundle ID / URL overrides still work
+- [x] Confirm the non-deep-link launch path still passes after the API change
 
 ## Done when
 
