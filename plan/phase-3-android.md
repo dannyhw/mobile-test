@@ -102,3 +102,30 @@ Android's `dumpWindowHierarchy()` returns XML with different attribute names tha
 3. M3: Port forwarding
 4. M5: View hierarchy normalization
 5. M4: Cross-platform config
+
+---
+
+## Checklist
+
+### Overall Status
+
+- [ ] M1: Android device detection and management
+- [ ] M2: Android driver HTTP server and core endpoints
+- [ ] M3: Port forwarding and connection
+- [ ] M4: Cross-platform test config
+- [ ] M5: View hierarchy normalization
+- [ ] Phase 3 validation complete
+
+### Current Stage
+
+- [ ] Android runtime implementation started
+- [ ] `AndroidDevice` added
+- [ ] Android driver project scaffolded
+- [ ] Cross-platform iOS/Android test execution proven
+
+### Verification Snapshot
+
+- [ ] `adb devices` integration verified
+- [ ] Driver install and launch verified on an emulator/device
+- [ ] Android element tree normalized into `ElementHandle`
+- [ ] At least one shared test file passes on Android

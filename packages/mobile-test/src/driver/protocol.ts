@@ -22,6 +22,15 @@ export interface PressKeyRequest {
   key: 'delete' | 'return' | 'enter' | 'tab' | 'space' | 'escape'
 }
 
+export interface ClearTextRequest {
+  bundleId?: string
+  identifier?: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface LaunchAppRequest {
   bundleId: string
 }

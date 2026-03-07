@@ -3,6 +3,7 @@ import type {
   SwipeRequest,
   TypeTextRequest,
   PressKeyRequest,
+  ClearTextRequest,
   LaunchAppRequest,
   TerminateAppRequest,
   DeviceInfoResponse,
@@ -43,6 +44,10 @@ export class DriverClient {
 
   async eraseText(charactersToErase: number): Promise<void> {
     await this.post<{ charactersToErase: number }>('/eraseText', { charactersToErase })
+  }
+
+  async clearText(request: ClearTextRequest): Promise<void> {
+    await this.post<ClearTextRequest>('/clearText', request)
   }
 
   async screenshot(): Promise<Buffer> {

@@ -104,20 +104,11 @@ export class Element {
 
   async replaceText(text: string): Promise<void> {
     return log.time(`replaceText(${this.locator})`, async () => {
-      // Tap to focus, erase existing text, then type replacement
-      const el = await this.resolve()
-      const center = frameCenter(toFrame(el.frame))
-      await getDriverClient().tap(center.x, center.y)
-      await new Promise(r => setTimeout(r, 300)) // Wait for keyboard
-
-      // Erase existing text by sending delete keys
-      const currentValue = el.value ?? ''
-      if (currentValue.length > 0) {
-        await getDriverClient().eraseText(currentValue.length)
-        await new Promise(r => setTimeout(r, 200))
+      const el = await this.focusForTextEditing()
+      await getDriverClient().clearText(this.toClearTextRequest(el))
+      if (text.length > 0) {
+        await getDriverClient().typeText(text)
       }
-
-      await getDriverClient().typeText(text)
     })
   }
 
@@ -128,10 +119,10 @@ export class Element {
   }
 
   async clear(): Promise<void> {
-    throw new Error(
-      'element.clear() is not yet implemented.\n\n' +
-      'Workaround: select the text manually and delete it, or use element.type() to overwrite.'
-    )
+    return log.time(`clear(${this.locator})`, async () => {
+      const el = await this.focusForTextEditing()
+      await getDriverClient().clearText(this.toClearTextRequest(el))
+    })
   }
 
   /**
@@ -250,6 +241,36 @@ export class Element {
       gesture.endX,
       gesture.endY,
     )
+  }
+
+  private async focusForTextEditing(): Promise<ElementHandle> {
+    const el = await this.resolve()
+    if (el.hasFocus) return el
+
+    const center = frameCenter(toFrame(el.frame))
+    await getDriverClient().tap(center.x, center.y)
+    await new Promise(r => setTimeout(r, 300))
+    return el
+  }
+
+  private toClearTextRequest(el: ElementHandle): {
+    bundleId?: string
+    identifier?: string
+    x: number
+    y: number
+    width: number
+    height: number
+  } {
+    const frame = toFrame(el.frame)
+
+    return {
+      bundleId: getActiveBundleId() ?? undefined,
+      identifier: el.identifier || undefined,
+      x: frame.x,
+      y: frame.y,
+      width: frame.width,
+      height: frame.height,
+    }
   }
 
   async isVisible(): Promise<boolean> {

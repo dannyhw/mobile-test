@@ -55,3 +55,29 @@ Visual report showing baseline vs latest vs diff for each screenshot test.
 2. M4: Documentation (needed for any public release)
 3. M2: HTML report
 4. M3: CI/CD guidance
+
+---
+
+## Checklist
+
+### Overall Status
+
+- [ ] M1: CLI tool
+- [ ] M2: HTML report with screenshot diffs
+- [ ] M3: CI/CD guidance
+- [ ] M4: Documentation
+- [ ] Phase 4 validation complete
+
+### Current Stage
+
+- [ ] Public release polish work started
+- [ ] CLI entrypoint implemented
+- [ ] Report generation implemented
+- [ ] Release-facing docs drafted
+
+### Verification Snapshot
+
+- [ ] `bunx mobile-test init` scaffolds a working setup
+- [ ] `bunx mobile-test run` and `update` work end to end
+- [ ] HTML report renders baseline/latest/diff correctly
+- [ ] CI example documented and runnable

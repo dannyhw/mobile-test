@@ -92,11 +92,17 @@ export function registerMatchers(): void {
         const timeout = getActionTimeout()
         const start = Date.now()
         let value: string | undefined
+        const normalize = (raw: string | undefined): string | undefined => {
+          if (raw === undefined && expected === '') {
+            return ''
+          }
+          return raw
+        }
 
         while (Date.now() - start < timeout) {
           const handle = await received.tryResolve()
           if (handle) {
-            value = handle.value
+            value = normalize(handle.value)
             if (value === expected) break
           }
           await new Promise(r => setTimeout(r, POLL_INTERVAL))
