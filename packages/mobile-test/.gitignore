@@ -4,3 +4,4 @@ screenshots/latest/
 screenshots/diff/
 ios-driver/build/
 ios-driver/MobileTestDriver.xcodeproj/
+.npmrc
