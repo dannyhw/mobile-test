@@ -129,4 +129,6 @@ This is a rough comparison of the tools that shaped the direction of the project
 | Detox         | Jest\*     | Yes | Yes    | Yes   | No      | Yes     | Strong API, app integration |
 | Appium / WDIO | WDIO\*     | Yes | Yes    | No    | Partial | Yes     | Flexible, broader stack     |
 
+`*` common default, but configurable.
+
 The details behind this table are documented in [`research/`](./research/) and [`PROJECT_REQUIREMENTS_AND_CONTEXT.md`](./PROJECT_REQUIREMENTS_AND_CONTEXT.md).
