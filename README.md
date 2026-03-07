@@ -122,12 +122,12 @@ This project is aiming for a practical middle ground:
 
 This is a rough comparison of the tools that shaped the direction of the project. It is meant as a practical summary of tradeoffs, not a scorecard.
 
-| Tool          | Runner     | TS  | Native | Build | Shots   | Actions | Notes                       |
-| ------------- | ---------- | --- | ------ | ----- | ------- | ------- | --------------------------- |
-| mobile-test   | Vitest     | Yes | Yes    | No    | Yes     | Yes     | TS API, screenshot-first    |
-| Maestro       | CLI + YAML | No  | Yes    | No    | Basic   | Yes     | Driver-app model            |
-| Detox         | Jest\*     | Yes | Yes    | Yes   | No      | Yes     | Strong API, app integration |
-| Appium / WDIO | WDIO\*     | Yes | Yes    | No    | Partial | Yes     | Flexible, broader stack     |
+| Tool          | Runner     | TS  | Custom Build | Screenshots | Notes                       |
+| ------------- | ---------- | --- | ------------ | ----------- | --------------------------- |
+| mobile-test   | Vitest     | Yes | No           | Yes         | TS API, screenshot-first    |
+| Maestro       | CLI + YAML | No  | No           | Basic       | Driver-app model            |
+| Detox         | Jest\*     | Yes | Yes          | No          | Strong API, app integration |
+| Appium / WDIO | WDIO\*     | Yes | No           | Partial     | Flexible, broader stack     |
 
 `*` common default, but configurable.
 
