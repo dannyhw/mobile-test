@@ -4,7 +4,7 @@
 - Written with typescript, uses swift/kotlin where required for native integration
 - doesn't require custom build of the app
 - doesn't require changing app code other than a11y or test ids
-- focus on screenshot testing workflow
+- built-in screenshot comparison is an important feature
 - supports iOS and Android
 - relies on native tooling, provides a thin wrapper around it
 - provides an api similar to existing ts testing tools like playwright/vitest to make it familiar

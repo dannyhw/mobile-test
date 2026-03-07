@@ -1,6 +1,6 @@
 # mobile-test
 
-`mobile-test` is an early-stage mobile testing framework aimed at React Native teams that want a TypeScript API, a practical screenshot testing workflow, and a Vitest-based test runner setup with less friction than the usual options.
+`mobile-test` is an early-stage mobile testing framework aimed at React Native teams that want a TypeScript API, built-in screenshot comparison as an important part of the workflow, and a Vitest-based test runner setup with less friction than the usual options.
 
 The core idea is simple: use the native automation tools that already exist on iOS and Android, wrap them in a small TypeScript-first test API, and make screenshot assertions part of the normal test flow instead of an afterthought.
 
@@ -10,7 +10,7 @@ This repo is not trying to invent mobile automation from scratch, and it is not 
 
 - simple setup, but a non-TypeScript authoring model
 - a good API, but custom app builds and extra integration work
-- screenshot testing, but only with a separate workflow or extra tooling
+- screenshot comparison, but only with a separate workflow or extra tooling
 
 The project is meant to explore whether we can get a better balance of those tradeoffs.
 
@@ -24,7 +24,7 @@ The goals in this repo are:
 - Vitest as the test runner, rather than a separate custom runner
 - no custom build of the app under test
 - no app changes beyond sensible accessibility labels or test IDs
-- a first-class screenshot testing workflow with baselines, diffs, masking, and updates
+- built-in screenshot comparison with baselines, diffs, masking, and updates
 - support for both iOS and Android
 - a thin wrapper around native platform tooling rather than a large new runtime
 
@@ -96,7 +96,7 @@ This project is directly informed by existing tools:
 - Maestro: driver-app pattern, no-custom-build approach, practical device control
 - Detox: TypeScript-friendly test API, locator and assertion style
 - Appium / WebDriverIO: server-driver architecture and cross-platform lessons
-- Owl: screenshot testing workflow for React Native
+- Owl: screenshot comparison workflow for React Native
 - Playwright / Vitest: test ergonomics, expectations, and familiar API shape
 
 The research notes in [`research/`](./research/) go into more detail on what was borrowed, what was rejected, and why.
@@ -122,12 +122,12 @@ This project is aiming for a practical middle ground:
 
 This is a rough comparison of the tools that shaped the direction of the project. It is meant as a practical summary of tradeoffs, not a scorecard.
 
-| Tool          | Runner     | TS  | Custom Build | Screenshots | Notes                       |
-| ------------- | ---------- | --- | ------------ | ----------- | --------------------------- |
-| mobile-test   | Vitest     | Yes | No           | Yes         | TS API, screenshot-first    |
-| Maestro       | CLI + YAML | No  | No           | Basic       | Driver-app model            |
-| Detox         | Jest\*     | Yes | Yes          | No          | Strong API, app integration |
-| Appium / WDIO | WDIO\*     | Yes | No           | Partial     | Flexible, broader stack     |
+| Tool          | Runner     | TS  | Custom Build | Screenshots | Notes                        |
+| ------------- | ---------- | --- | ------------ | ----------- | ---------------------------- |
+| mobile-test   | Vitest     | Yes | No           | Yes         | TS API, built-in screenshots |
+| Maestro       | CLI + YAML | No  | No           | Basic       | Driver-app model             |
+| Detox         | Jest\*     | Yes | Yes          | No          | Strong API, app integration  |
+| Appium / WDIO | WDIO\*     | Yes | No           | Partial     | Flexible, broader stack      |
 
 `*` common default, but configurable.
 
