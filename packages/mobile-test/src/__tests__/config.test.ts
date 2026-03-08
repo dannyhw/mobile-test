@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { defineConfig } from '../config.js'
+import { createProvidedConfig, resolveProjectTarget } from '../vitest/context.js'
 
 describe('defineConfig', () => {
   it('returns defaults when given empty config', () => {
@@ -78,12 +79,81 @@ describe('defineConfig', () => {
   it('supports project targets', () => {
     const config = defineConfig({
       projects: [
-        { name: 'iphone-16', device: 'iPhone 16' },
-        { name: 'pixel-9', device: 'Pixel 9' },
+        { name: 'iphone-16', platform: 'ios', device: 'iPhone 16' },
+        { name: 'pixel-any', platform: 'android' },
       ],
     })
 
     expect(config.projects).toHaveLength(2)
-    expect(config.projects![0].name).toBe('iphone-16')
+    expect(config.projects![0]).toEqual({
+      name: 'iphone-16',
+      platform: 'ios',
+      device: 'iPhone 16',
+    })
+    expect(config.projects![1]).toEqual({
+      name: 'pixel-any',
+      platform: 'android',
+    })
+  })
+
+  it('defaults project platform to iOS to preserve the existing path', () => {
+    const config = defineConfig({
+      projects: [{ name: 'iphone-16', device: 'iPhone 16' }],
+    })
+
+    expect(config.projects).toEqual([
+      {
+        name: 'iphone-16',
+        platform: 'ios',
+        device: 'iPhone 16',
+      },
+    ])
+  })
+})
+
+describe('project target resolution', () => {
+  it('selects the matching configured project by Vitest project name', () => {
+    const config = defineConfig({
+      projects: [
+        { name: 'iphone-16', platform: 'ios', device: 'iPhone 16' },
+        { name: 'pixel-any', platform: 'android' },
+      ],
+    })
+
+    const provided = createProvidedConfig(config)
+
+    expect(resolveProjectTarget(provided, 'pixel-any')).toEqual({
+      name: 'pixel-any',
+      platform: 'android',
+    })
+  })
+
+  it('selects the single configured project without an explicit project name', () => {
+    const config = defineConfig({
+      projects: [{ name: 'iphone-16', device: 'iPhone 16' }],
+    })
+
+    const provided = createProvidedConfig(config)
+
+    expect(resolveProjectTarget(provided)).toEqual({
+      name: 'iphone-16',
+      platform: 'ios',
+      device: 'iPhone 16',
+    })
+  })
+
+  it('throws when multiple projects exist without a selected runtime project', () => {
+    const config = defineConfig({
+      projects: [
+        { name: 'iphone-16', platform: 'ios', device: 'iPhone 16' },
+        { name: 'pixel-any', platform: 'android' },
+      ],
+    })
+
+    const provided = createProvidedConfig(config)
+
+    expect(() => resolveProjectTarget(provided)).toThrow(
+      'Multiple mobile-test projects are configured, but no project was selected.',
+    )
   })
 })

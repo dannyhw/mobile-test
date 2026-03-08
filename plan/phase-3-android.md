@@ -112,7 +112,7 @@ Android's `dumpWindowHierarchy()` returns XML with different attribute names tha
 - [x] M1: Android device detection and management
 - [x] M2: Android driver HTTP server and core endpoints
 - [x] M3: Port forwarding and connection
-- [ ] M4: Cross-platform test config
+- [x] M4: Cross-platform test config
 - [x] M5: View hierarchy normalization
 - [ ] Phase 3 validation complete
 

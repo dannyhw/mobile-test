@@ -1,12 +1,12 @@
-# Phase 3 Step 4: Cross-Platform Test Config
+# Phase 3 Validation
 
 ## Goal
 
-Continue Phase 3 from `../../plan/phase-3-android.md`: make the shared config and Vitest setup feel first-class for iOS and Android so the same suite can be selected and run across multiple projects/devices without platform-specific setup hacks.
+Close out Phase 3 from `../../plan/phase-3-android.md`: validate that the cross-platform runtime, config, and shared suite path are solid enough to mark Android support complete before moving on to Phase 4 polish.
 
 ## Next Focus
 
-- [x] Scope the minimal config changes needed from Phase 3 M4 without breaking the current iOS default path.
-- [x] Add cross-platform app config support for per-platform bundle IDs/app IDs.
-- [ ] Support project-style runtime selection so shared suites can target both iOS and Android devices cleanly.
-- [ ] Prove at least one shared test configuration path that can select Android without relying on ad hoc env wiring.
+- [x] Run the shared example-app E2E suite through the named Android project path on a real connected device.
+- [x] Capture the remaining Android gap that blocks full shared-suite signoff: `/clearText` is not implemented in the Android driver, so `element.clear()` fails in `packages/example-app/e2e/form.test.ts`.
+- [ ] Run the shared example-app E2E suite through the named iOS project path on a real booted simulator.
+- [ ] Update the Phase 3 plan snapshot once the end-to-end validation evidence is in place.
