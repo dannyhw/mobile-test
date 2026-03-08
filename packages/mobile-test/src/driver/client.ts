@@ -11,6 +11,10 @@ import type {
   StatusResponse,
   ViewHierarchyResponse,
 } from './protocol.js'
+import {
+  looksLikeAndroidViewHierarchy,
+  normalizeAndroidViewHierarchy,
+} from './android-view-hierarchy.js'
 import { log } from '../logger.js'
 
 export class DriverClient {
@@ -60,7 +64,15 @@ export class DriverClient {
   async viewHierarchy(bundleId?: string): Promise<ViewHierarchyResponse> {
     return log.time('driver.viewHierarchy', async () => {
       const query = bundleId ? `?bundleId=${encodeURIComponent(bundleId)}` : ''
-      return this.get(`/viewHierarchy${query}`)
+      const res = await this.fetch(`/viewHierarchy${query}`, 'viewHierarchy')
+      const contentType = res.headers.get('content-type')
+      const body = await res.text()
+
+      if (looksLikeAndroidViewHierarchy(contentType, body)) {
+        return normalizeAndroidViewHierarchy(body, bundleId)
+      }
+
+      return JSON.parse(body) as ViewHierarchyResponse
     })
   }
 
@@ -90,7 +102,7 @@ export class DriverClient {
       throw new Error(
         `Failed to connect to driver at ${this.baseUrl}${path} (${operation}).\n\n` +
         `Is the driver running? Check that:\n` +
-        `  - A simulator is booted (xcrun simctl list devices booted)\n` +
+        `  - The target simulator/device is booted or connected\n` +
         `  - The driver was started (via vitest plugin or launchDriver())\n` +
         `  - Nothing else is using port ${new URL(this.baseUrl).port}`,
         { cause: err },
@@ -127,7 +139,7 @@ export class DriverClient {
       throw new Error(
         `Failed to connect to driver at ${this.baseUrl}${path} (${operation}).\n\n` +
         `Is the driver running? Check that:\n` +
-        `  - A simulator is booted (xcrun simctl list devices booted)\n` +
+        `  - The target simulator/device is booted or connected\n` +
         `  - The driver was started (via vitest plugin or launchDriver())`,
         { cause: err },
       )

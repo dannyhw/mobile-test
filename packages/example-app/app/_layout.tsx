@@ -9,10 +9,8 @@ import { LogBox, useColorScheme } from "react-native";
 
 LogBox.ignoreAllLogs(true);
 
-const StorybookEnabled = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
-
 export const unstable_settings = {
-  initialRouteName: StorybookEnabled ? "(storybook)/index" : "(tabs)",
+  initialRouteName: "(tabs)",
 };
 
 export default function RootLayout() {
@@ -31,12 +29,11 @@ export default function RootLayout() {
     >
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Protected guard={StorybookEnabled}>
-          <Stack.Screen
-            name="(storybook)/index"
-            options={{ title: "Storybook", headerShown: false }}
-          />
-        </Stack.Protected>
+
+        <Stack.Screen
+          name="storybook/index"
+          options={{ title: "Storybook", headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );

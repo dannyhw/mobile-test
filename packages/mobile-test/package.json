@@ -23,6 +23,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "build:android-driver": "./android-driver/build.sh",
     "dev": "tsup --watch",
     "test": "vitest run"
   },

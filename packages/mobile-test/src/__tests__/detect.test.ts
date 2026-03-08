@@ -8,8 +8,10 @@ vi.mock('execa', () => ({
 import {
   detectBootedSimulators,
   detectConnectedAndroidDevices,
+  getAndroidDevice,
   getDefaultAndroidDevice,
   getDefaultDevice,
+  getIOSDevice,
 } from '../device/detect.js'
 import { execaCommand } from 'execa'
 
@@ -92,6 +94,15 @@ describe('getDefaultDevice', () => {
   })
 })
 
+describe('getIOSDevice', () => {
+  it('selects a named simulator when one matches', async () => {
+    mockExeca.mockResolvedValue({ stdout: JSON.stringify(simctlOutput) } as any)
+
+    const device = await getIOSDevice('iPhone 14')
+    expect(device.udid).toBe('GHI-789')
+  })
+})
+
 describe('detectConnectedAndroidDevices', () => {
   it('returns only connected Android devices in the ready state', async () => {
     mockExeca.mockResolvedValue({
@@ -153,5 +164,32 @@ describe('getDefaultAndroidDevice', () => {
 
     await expect(getDefaultAndroidDevice()).rejects.toThrow('No connected Android devices found')
     await expect(getDefaultDevice('android')).rejects.toThrow('adb devices')
+  })
+})
+
+describe('getAndroidDevice', () => {
+  it('matches Android devices by partial display name', async () => {
+    mockExeca.mockResolvedValue({
+      stdout: [
+        'List of devices attached',
+        'emulator-5554 device product:sdk_gphone64_arm64 model:Pixel_9_Pro device:emu64a transport_id:1',
+      ].join('\n'),
+    } as any)
+
+    const device = await getAndroidDevice('Pixel 9')
+    expect(device.udid).toBe('emulator-5554')
+  })
+
+  it('throws a helpful error when a named Android device is missing', async () => {
+    mockExeca.mockResolvedValue({
+      stdout: [
+        'List of devices attached',
+        'emulator-5554 device product:sdk_gphone64_arm64 model:Pixel_9_Pro device:emu64a transport_id:1',
+      ].join('\n'),
+    } as any)
+
+    await expect(getAndroidDevice('Pixel 8')).rejects.toThrow(
+      'No connected Android device matched "Pixel 8".',
+    )
   })
 })

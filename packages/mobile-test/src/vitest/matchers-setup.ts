@@ -1,36 +1,38 @@
 import { DriverClient, setDriverClient, setDevice, setTestConfig } from 'mobile-test'
+import { AndroidDevice } from '../device/android-device.js'
 import { IOSDevice } from '../device/ios-device.js'
 import { registerMatchers } from '../expect/matchers.js'
 import { setLogLevel, log } from '../logger.js'
-import { afterAll } from 'vitest'
+import { afterAll, inject } from 'vitest'
 
-// Connect to the driver that globalSetup started
-const port = process.env.__MOBILE_TEST_PORT
-const deviceName = process.env.__MOBILE_TEST_DEVICE_NAME
-const deviceUdid = process.env.__MOBILE_TEST_DEVICE_UDID
+const runtime = inject('__mobileTestRuntime')
+const config = inject('__mobileTestConfig')
 
-if (!port || !deviceName || !deviceUdid) {
+if (!runtime) {
   throw new Error(
-    'mobile-test: Missing environment variables from globalSetup.\n' +
+    'mobile-test: Missing runtime context from globalSetup.\n' +
     'Make sure the mobile-test vitest plugin is configured correctly.'
   )
 }
 
-// Apply config overrides if passed from globalSetup
-const actionTimeout = process.env.__MOBILE_TEST_ACTION_TIMEOUT
-const logLevel = process.env.__MOBILE_TEST_LOG_LEVEL as 'silent' | 'info' | 'debug' | undefined
-const screenshotsDir = process.env.__MOBILE_TEST_SCREENSHOTS_DIR
-const iosBundleId = process.env.__MOBILE_TEST_IOS_BUNDLE_ID
-const iosScheme = process.env.__MOBILE_TEST_IOS_SCHEME
-const androidAppId = process.env.__MOBILE_TEST_ANDROID_APP_ID
-if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId) {
+if (!config) {
+  throw new Error(
+    'mobile-test: Missing config context from Vitest provide.\n' +
+    'Make sure the mobile-test vitest plugin is configured correctly.'
+  )
+}
+
+const { actionTimeout, logLevel, screenshotsDir, iosBundleId, iosScheme, androidAppId, androidScheme } = config
+
+if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId || androidScheme) {
   setTestConfig({
-    ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
+    ...(actionTimeout ? { actionTimeout } : {}),
     ...(logLevel ? { logLevel } : {}),
     ...(screenshotsDir ? { screenshotsDir } : {}),
     ...(iosBundleId ? { iosBundleId } : {}),
     ...(iosScheme ? { iosScheme } : {}),
     ...(androidAppId ? { androidAppId } : {}),
+    ...(androidScheme ? { androidScheme } : {}),
   })
 }
 if (logLevel) {
@@ -41,10 +43,13 @@ afterAll(() => {
   log.printTimingSummary()
 })
 
+const { port, deviceName, deviceUdid, platform } = runtime
 const client = new DriverClient(`http://localhost:${port}`)
 setDriverClient(client)
 
-const device = new IOSDevice(deviceUdid, deviceName, client)
+const device = platform === 'android'
+  ? new AndroidDevice(deviceUdid, deviceName, client)
+  : new IOSDevice(deviceUdid, deviceName, client)
 setDevice(device)
 
 registerMatchers()

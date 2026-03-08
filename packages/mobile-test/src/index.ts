@@ -5,10 +5,16 @@ export { IOSDevice } from './device/ios-device.js'
 export { element } from './element/element.js'
 export { by } from './element/by.js'
 export { defineConfig } from './config.js'
-export { mobileTestPlugin } from './vitest/plugin.js'
+export { mobileTestPlugin, mobileTestProjects } from './vitest/plugin.js'
 
 export type { Device, DeviceInfo, LaunchOptions, OpenUrlOptions, WaitForAnimationOptions } from './device/types.js'
-export type { IOSAppConfig, MobileTestConfig, ResolvedConfig } from './config.js'
+export type {
+  IOSAppConfig,
+  MobileTestConfig,
+  ProjectConfig,
+  ResolvedConfig,
+  ResolvedProjectConfig,
+} from './config.js'
 export type { Locator } from './element/by.js'
 export type { Element } from './element/element.js'
 export type { ElementHandle, Frame } from './element/types.js'
@@ -21,4 +27,4 @@ export { setDriverClient } from './driver/context.js'
 export { setTestConfig } from './config-context.js'
 export { log, setLogLevel } from './logger.js'
 export type { LogLevel } from './logger.js'
-export type { DriverProcess } from './driver/installer.js'
+export type { DriverProcess, LaunchDriverOptions } from './driver/installer.js'
