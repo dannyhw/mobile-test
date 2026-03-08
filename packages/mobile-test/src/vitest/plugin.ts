@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { defineConfig, type MobileTestConfig } from '../config.js'
+import { createProvidedConfig } from './context.js'
+import type { TestProjectConfiguration, TestUserConfig } from 'vitest/config'
 
 /**
  * Find the mobile-test package root by walking up from this file
@@ -40,16 +42,32 @@ function resolveSetupFiles(packageRoot: string) {
 }
 
 export function mobileTestPlugin(config?: MobileTestConfig) {
+  return mobileTestPluginWithOptions(config)
+}
+
+export function mobileTestProjects(
+  config: MobileTestConfig,
+  testConfig: TestUserConfig = {},
+): TestProjectConfiguration[] {
+  const resolved = defineConfig(config)
+
+  return (resolved.projects ?? []).map(project => ({
+    test: {
+      ...testConfig,
+      name: project.name,
+    },
+    plugins: [mobileTestPluginWithOptions(config, { projectName: project.name })],
+  }))
+}
+
+function mobileTestPluginWithOptions(
+  config?: MobileTestConfig,
+  options?: { projectName?: string },
+) {
   return {
     name: 'mobile-test',
     config() {
       const resolved = defineConfig(config ?? {})
-
-      process.env.__MOBILE_TEST_ACTION_TIMEOUT = String(resolved.actionTimeout)
-      process.env.__MOBILE_TEST_LOG_LEVEL = resolved.logLevel
-      process.env.__MOBILE_TEST_SCREENSHOTS_DIR = resolved.screenshots.dir
-      process.env.__MOBILE_TEST_IOS_BUNDLE_ID = resolved.app.ios?.bundleId ?? ''
-      process.env.__MOBILE_TEST_IOS_SCHEME = resolved.app.ios?.scheme ?? ''
 
       if (resolved.screenshots.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
         process.env.UPDATE_SCREENSHOTS = 'true'
@@ -62,6 +80,9 @@ export function mobileTestPlugin(config?: MobileTestConfig) {
         test: {
           globalSetup: [files.setup],
           setupFiles: [files.matchersSetup],
+          provide: {
+            __mobileTestConfig: createProvidedConfig(resolved, options?.projectName),
+          },
         },
       }
     },

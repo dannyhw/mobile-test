@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { setTestConfig } from '../config-context.js'
-import { resolveLaunchConfig, resolveOpenUrlConfig } from '../device/launch-config.js'
+import {
+  resolveAndroidLaunchConfig,
+  resolveAndroidOpenUrlConfig,
+  resolveLaunchConfig,
+  resolveOpenUrlConfig,
+} from '../device/launch-config.js'
 
 describe('launch config resolution', () => {
   beforeEach(() => {
     setTestConfig({
       iosBundleId: undefined,
       iosScheme: undefined,
+      androidAppId: undefined,
+      androidScheme: undefined,
     })
   })
 
@@ -92,6 +99,8 @@ describe('openUrl config resolution', () => {
     setTestConfig({
       iosBundleId: undefined,
       iosScheme: undefined,
+      androidAppId: undefined,
+      androidScheme: undefined,
     })
   })
 
@@ -111,5 +120,90 @@ describe('openUrl config resolution', () => {
     expect(() => resolveOpenUrlConfig({ path: 'form' })).toThrow(
       'Deep link path must start with "/". Received: form'
     )
+  })
+})
+
+describe('android launch config resolution', () => {
+  beforeEach(() => {
+    setTestConfig({
+      androidAppId: undefined,
+      androidScheme: undefined,
+    })
+  })
+
+  it('uses the configured Android app ID by default', () => {
+    setTestConfig({ androidAppId: 'com.example.android' })
+
+    expect(resolveAndroidLaunchConfig()).toEqual({
+      bundleId: 'com.example.android',
+      url: undefined,
+    })
+  })
+
+  it('accepts a full Android deep link URL', () => {
+    setTestConfig({ androidAppId: 'com.example.android' })
+
+    expect(resolveAndroidLaunchConfig({ url: 'exampleapp://form' })).toEqual({
+      bundleId: 'com.example.android',
+      url: 'exampleapp://form',
+    })
+  })
+
+  it('composes an Android deep link from an explicit scheme and path', () => {
+    setTestConfig({ androidAppId: 'com.example.android' })
+
+    expect(resolveAndroidLaunchConfig({ scheme: 'exampleapp', path: '/form' })).toEqual({
+      bundleId: 'com.example.android',
+      url: 'exampleapp:///form',
+    })
+  })
+
+  it('uses the configured Android scheme when composing a path URL', () => {
+    setTestConfig({
+      androidAppId: 'com.example.android',
+      androidScheme: 'exampleapp',
+    })
+
+    expect(resolveAndroidLaunchConfig({ path: '/form' })).toEqual({
+      bundleId: 'com.example.android',
+      url: 'exampleapp:///form',
+    })
+  })
+
+  it('throws when no Android app ID is configured or provided', () => {
+    expect(() => resolveAndroidLaunchConfig()).toThrow(
+      'No Android app ID configured. Configure app.android or pass a bundle ID override.'
+    )
+  })
+})
+
+describe('android openUrl config resolution', () => {
+  beforeEach(() => {
+    setTestConfig({
+      androidAppId: undefined,
+      androidScheme: undefined,
+    })
+  })
+
+  it('accepts a full URL string without using config', () => {
+    expect(resolveAndroidOpenUrlConfig('exampleapp://form')).toBe('exampleapp://form')
+  })
+
+  it('composes a URL from an explicit scheme and path', () => {
+    expect(resolveAndroidOpenUrlConfig({ scheme: 'exampleapp', path: '/form' })).toBe(
+      'exampleapp:///form',
+    )
+  })
+
+  it('throws when a path is provided without a scheme', () => {
+    expect(() => resolveAndroidOpenUrlConfig({ path: '/form' })).toThrow(
+      'No Android URL scheme configured. Configure app.android.scheme or pass a full URL / { scheme }.'
+    )
+  })
+
+  it('uses the configured Android scheme for openUrl path inputs', () => {
+    setTestConfig({ androidScheme: 'exampleapp' })
+
+    expect(resolveAndroidOpenUrlConfig({ path: '/form' })).toBe('exampleapp:///form')
   })
 })

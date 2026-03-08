@@ -19,6 +19,8 @@ const defaults = {
   logLevel: 'info' as 'silent' | 'info' | 'debug',
   iosBundleId: undefined as string | undefined,
   iosScheme: undefined as string | undefined,
+  androidAppId: undefined as string | undefined,
+  androidScheme: undefined as string | undefined,
 }
 
 function getConfig() {
@@ -49,6 +51,14 @@ export function getIOSAppConfig() {
   return {
     bundleId: config.iosBundleId,
     scheme: config.iosScheme,
+  }
+}
+
+export function getAndroidAppConfig() {
+  const config = getConfig()
+  return {
+    appId: config.androidAppId,
+    scheme: config.androidScheme,
   }
 }
 

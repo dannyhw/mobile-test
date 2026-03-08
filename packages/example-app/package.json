@@ -8,8 +8,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test:e2e": "vitest run",
-    "test:e2e:update": "UPDATE_SCREENSHOTS=true vitest run",
+    "test:e2e": "vitest run --project ios-simulator",
+    "test:e2e:android": "vitest run --project android-emulator",
+    "test:e2e:all": "vitest run",
+    "test:e2e:update": "UPDATE_SCREENSHOTS=true vitest run --project ios-simulator",
     "storybook-generate": "sb-rn-get-stories",
     "storybook": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --dev-client",
     "storybook:ios": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo run:ios"

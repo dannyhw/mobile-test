@@ -3,19 +3,31 @@ export interface IOSAppConfig {
   scheme?: string
 }
 
+export interface AndroidAppConfig {
+  appId?: string
+  scheme?: string
+}
+
 export interface AppConfig {
   ios?: string | IOSAppConfig
-  android?: string
+  android?: string | AndroidAppConfig
 }
 
 export interface ResolvedAppConfig {
   ios?: IOSAppConfig
-  android?: string
+  android?: AndroidAppConfig
 }
 
 export interface ProjectConfig {
   name: string
-  device: string
+  device?: string
+  platform?: 'ios' | 'android'
+}
+
+export interface ResolvedProjectConfig {
+  name: string
+  device?: string
+  platform: 'ios' | 'android'
 }
 
 export interface ScreenshotConfig {
@@ -37,7 +49,7 @@ export interface MobileTestConfig {
 
 export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots' | 'logLevel'>> {
   app: ResolvedAppConfig
-  projects?: ProjectConfig[]
+  projects?: ResolvedProjectConfig[]
   screenshots: Required<ScreenshotConfig>
   logLevel: 'silent' | 'info' | 'debug'
 }
@@ -62,13 +74,21 @@ export function defineConfig(config: MobileTestConfig): ResolvedConfig {
   } else if (iosConfig) {
     app.ios = { ...iosConfig }
   }
-  if (config.app?.android) {
-    app.android = config.app.android
+  const androidConfig = config.app?.android
+  if (typeof androidConfig === 'string') {
+    app.android = { appId: androidConfig }
+  } else if (androidConfig) {
+    app.android = { ...androidConfig }
   }
+
+  const projects = config.projects?.map(project => ({
+    ...project,
+    platform: project.platform ?? 'ios',
+  }))
 
   return {
     app,
-    projects: config.projects,
+    projects,
     screenshots: { ...defaults.screenshots, ...config.screenshots },
     timeout: config.timeout ?? defaults.timeout,
     actionTimeout: config.actionTimeout ?? defaults.actionTimeout,
