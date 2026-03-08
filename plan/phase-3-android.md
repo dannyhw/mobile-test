@@ -109,23 +109,23 @@ Android's `dumpWindowHierarchy()` returns XML with different attribute names tha
 
 ### Overall Status
 
-- [ ] M1: Android device detection and management
-- [ ] M2: Android driver HTTP server and core endpoints
-- [ ] M3: Port forwarding and connection
+- [x] M1: Android device detection and management
+- [x] M2: Android driver HTTP server and core endpoints
+- [x] M3: Port forwarding and connection
 - [ ] M4: Cross-platform test config
-- [ ] M5: View hierarchy normalization
+- [x] M5: View hierarchy normalization
 - [ ] Phase 3 validation complete
 
 ### Current Stage
 
-- [ ] Android runtime implementation started
-- [ ] `AndroidDevice` added
-- [ ] Android driver project scaffolded
-- [ ] Cross-platform iOS/Android test execution proven
+- [x] Android runtime implementation started
+- [x] `AndroidDevice` added
+- [x] Android driver project scaffolded
+- [x] Cross-platform iOS/Android test execution proven
 
 ### Verification Snapshot
 
-- [ ] `adb devices` integration verified
-- [ ] Driver install and launch verified on an emulator/device
-- [ ] Android element tree normalized into `ElementHandle`
-- [ ] At least one shared test file passes on Android
+- [x] `adb devices` integration verified
+- [x] Driver install and launch verified on an emulator/device
+- [x] Android element tree normalized into `ElementHandle`
+- [x] At least one shared test file passes on Android
