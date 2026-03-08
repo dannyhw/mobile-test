@@ -1,4 +1,5 @@
 import { DriverClient, setDriverClient, setDevice, setTestConfig } from 'mobile-test'
+import { AndroidDevice } from '../device/android-device.js'
 import { IOSDevice } from '../device/ios-device.js'
 import { registerMatchers } from '../expect/matchers.js'
 import { setLogLevel, log } from '../logger.js'
@@ -8,6 +9,7 @@ import { afterAll } from 'vitest'
 const port = process.env.__MOBILE_TEST_PORT
 const deviceName = process.env.__MOBILE_TEST_DEVICE_NAME
 const deviceUdid = process.env.__MOBILE_TEST_DEVICE_UDID
+const platform = process.env.__MOBILE_TEST_PLATFORM === 'android' ? 'android' : 'ios'
 
 if (!port || !deviceName || !deviceUdid) {
   throw new Error(
@@ -44,7 +46,9 @@ afterAll(() => {
 const client = new DriverClient(`http://localhost:${port}`)
 setDriverClient(client)
 
-const device = new IOSDevice(deviceUdid, deviceName, client)
+const device = platform === 'android'
+  ? new AndroidDevice(deviceUdid, deviceName, client)
+  : new IOSDevice(deviceUdid, deviceName, client)
 setDevice(device)
 
 registerMatchers()

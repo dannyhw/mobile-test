@@ -1,0 +1,46 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="dev.mobiletest.driver"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:3:5-67
+11-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:3:22-64
+12
+13    <application
+13-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:5:5-19:19
+14        android:allowBackup="false"
+14-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:6:9-36
+15        android:debuggable="true"
+16        android:extractNativeLibs="false"
+17        android:label="@string/app_name"
+17-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:7:9-41
+18        android:supportsRtl="true"
+18-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:8:9-35
+19        android:theme="@style/Theme.MobileTestDriver" >
+19-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:9:9-54
+20        <activity
+20-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:10:9-18:20
+21            android:name="dev.mobiletest.driver.MainActivity"
+21-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:11:13-41
+22            android:exported="true" >
+22-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:12:13-36
+23            <intent-filter>
+23-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:13:13-17:29
+24                <action android:name="android.intent.action.MAIN" />
+24-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:14:17-69
+24-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:14:25-66
+25
+26                <category android:name="android.intent.category.LAUNCHER" />
+26-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:16:17-77
+26-->/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/AndroidManifest.xml:16:27-74
+27            </intent-filter>
+28        </activity>
+29    </application>
+30
+31</manifest>

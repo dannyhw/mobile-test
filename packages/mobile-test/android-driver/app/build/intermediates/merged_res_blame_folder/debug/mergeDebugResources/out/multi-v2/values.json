@@ -1,0 +1,43 @@
+{
+    "logs": [
+        {
+            "outputFile": "dev.mobiletest.driver.app-mergeDebugResources-2:/values/values.xml",
+            "map": [
+                {
+                    "source": "/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/res/values/strings.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "55",
+                        "endOffsets": "67"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                },
+                {
+                    "source": "/Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/res/values/themes.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "93",
+                        "endOffsets": "105"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "111",
+                        "endColumns": "92",
+                        "endOffsets": "199"
+                    }
+                }
+            ]
+        }
+    ]
+}

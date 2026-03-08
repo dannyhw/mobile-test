@@ -1,0 +1,8 @@
+dev.mobiletest.driver.test.app-androidTest-0 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/generated/res/resValues/androidTest/debug
+dev.mobiletest.driver.test.app-updated_navigation_xml-1 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/generated/updated_navigation_xml/debugAndroidTest
+dev.mobiletest.driver.test.app-mergeDebugAndroidTestResources-2 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+dev.mobiletest.driver.test.app-mergeDebugAndroidTestResources-3 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+dev.mobiletest.driver.test.app-debugAndroidTest-4 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources
+dev.mobiletest.driver.test.app-tracing-1.1.0-5 /Users/danielwilliams/.gradle/caches/8.13/transforms/3530061c662bb692e8c50dfb10336ad9/transformed/tracing-1.1.0/res
+dev.mobiletest.driver.test.app-uiautomator-2.3.0-6 /Users/danielwilliams/.gradle/caches/8.13/transforms/96a663d928a44157901799da9495a692/transformed/uiautomator-2.3.0/res
+dev.mobiletest.driver.test.app-core-1.6.1-7 /Users/danielwilliams/.gradle/caches/8.13/transforms/c5e38813a4e114139f31042e0c09a8ec/transformed/core-1.6.1/res

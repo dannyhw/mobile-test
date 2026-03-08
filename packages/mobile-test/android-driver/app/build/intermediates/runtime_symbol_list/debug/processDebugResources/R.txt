@@ -1,0 +1,2 @@
+int string app_name 0x7f010000
+int style Theme_MobileTestDriver 0x7f020000

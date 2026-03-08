@@ -90,7 +90,7 @@ export class DriverClient {
       throw new Error(
         `Failed to connect to driver at ${this.baseUrl}${path} (${operation}).\n\n` +
         `Is the driver running? Check that:\n` +
-        `  - A simulator is booted (xcrun simctl list devices booted)\n` +
+        `  - The target simulator/device is booted or connected\n` +
         `  - The driver was started (via vitest plugin or launchDriver())\n` +
         `  - Nothing else is using port ${new URL(this.baseUrl).port}`,
         { cause: err },
@@ -127,7 +127,7 @@ export class DriverClient {
       throw new Error(
         `Failed to connect to driver at ${this.baseUrl}${path} (${operation}).\n\n` +
         `Is the driver running? Check that:\n` +
-        `  - A simulator is booted (xcrun simctl list devices booted)\n` +
+        `  - The target simulator/device is booted or connected\n` +
         `  - The driver was started (via vitest plugin or launchDriver())`,
         { cause: err },
       )

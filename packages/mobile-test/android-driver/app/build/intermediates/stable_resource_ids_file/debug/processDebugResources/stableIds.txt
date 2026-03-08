@@ -1,0 +1,2 @@
+dev.mobiletest.driver:style/Theme.MobileTestDriver = 0x7f020000
+dev.mobiletest.driver:string/app_name = 0x7f010000

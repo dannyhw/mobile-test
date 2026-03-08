@@ -1,0 +1,8 @@
+dev.mobiletest.driver.app-pngs-0 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/generated/res/pngs/debug
+dev.mobiletest.driver.app-resValues-1 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/generated/res/resValues/debug
+dev.mobiletest.driver.app-updated_navigation_xml-2 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/generated/updated_navigation_xml/debug
+dev.mobiletest.driver.app-packageDebugResources-3 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+dev.mobiletest.driver.app-packageDebugResources-4 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+dev.mobiletest.driver.app-debug-5 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/build/intermediates/merged_res/debug/mergeDebugResources
+dev.mobiletest.driver.app-debug-6 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/debug/res
+dev.mobiletest.driver.app-main-7 /Users/danielwilliams/.codex/worktrees/14db/test-framework/packages/mobile-test/android-driver/app/src/main/res
