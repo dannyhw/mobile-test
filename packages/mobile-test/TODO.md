@@ -1,12 +1,12 @@
-# Phase 3 Step 3: Android View Hierarchy Normalization
+# Phase 3 Validation
 
 ## Goal
 
-Continue Phase 3 from `../../plan/phase-3-android.md`: add Android `/viewHierarchy` support and normalize the dumped accessibility tree into the existing `ElementHandle` shape so element APIs and matchers can run on Android.
+Close out Phase 3 from `../../plan/phase-3-android.md`: validate that the cross-platform runtime, config, and shared suite path are solid enough to mark Android support complete before moving on to Phase 4 polish.
 
 ## Next Focus
 
-- [ ] Scope the Android hierarchy dump format and normalization mapping from Phase 3 M5 before changing the runtime surface.
-- [ ] Implement Android `/viewHierarchy` in the instrumentation driver.
-- [ ] Normalize Android XML attributes into the shared `ElementHandle` model.
-- [ ] Prove at least one Android element-driven flow against the normalized tree.
+- [x] Run the shared example-app E2E suite through the named Android project path on a real connected device.
+- [x] Capture the remaining Android gap that blocks full shared-suite signoff: `/clearText` is not implemented in the Android driver, so `element.clear()` fails in `packages/example-app/e2e/form.test.ts`.
+- [ ] Run the shared example-app E2E suite through the named iOS project path on a real booted simulator.
+- [ ] Update the Phase 3 plan snapshot once the end-to-end validation evidence is in place.

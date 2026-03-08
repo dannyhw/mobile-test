@@ -122,6 +122,59 @@ export async function getDefaultAndroidDevice(): Promise<AndroidDeviceInfo> {
   return devices[0]
 }
 
+function normalizeDeviceName(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+function matchRequestedDevice<T extends { name: string }>(
+  devices: T[],
+  requestedName: string,
+): T | undefined {
+  const normalizedRequestedName = normalizeDeviceName(requestedName)
+
+  return (
+    devices.find(device => normalizeDeviceName(device.name) === normalizedRequestedName)
+    ?? devices.find(device => normalizeDeviceName(device.name).includes(normalizedRequestedName))
+    ?? devices.find(device => normalizedRequestedName.includes(normalizeDeviceName(device.name)))
+  )
+}
+
+export async function getIOSDevice(deviceName?: string): Promise<SimulatorInfo> {
+  const simulators = await detectBootedSimulators()
+
+  if (!deviceName) {
+    return getDefaultIOSDevice()
+  }
+
+  const device = matchRequestedDevice(simulators, deviceName)
+  if (device) {
+    return device
+  }
+
+  throw new Error(
+    `No booted iOS simulator matched "${deviceName}".\n\n` +
+    `Booted simulators: ${simulators.map(device => device.name).join(', ') || 'none'}.`
+  )
+}
+
+export async function getAndroidDevice(deviceName?: string): Promise<AndroidDeviceInfo> {
+  const devices = await detectConnectedAndroidDevices()
+
+  if (!deviceName) {
+    return getDefaultAndroidDevice()
+  }
+
+  const device = matchRequestedDevice(devices, deviceName)
+  if (device) {
+    return device
+  }
+
+  throw new Error(
+    `No connected Android device matched "${deviceName}".\n\n` +
+    `Connected devices: ${devices.map(device => device.name).join(', ') || 'none'}.`
+  )
+}
+
 export function getDefaultDevice(): Promise<SimulatorInfo>
 export function getDefaultDevice(platform: 'ios'): Promise<SimulatorInfo>
 export function getDefaultDevice(platform: 'android'): Promise<AndroidDeviceInfo>
@@ -133,4 +186,17 @@ export async function getDefaultDevice(
   }
 
   return getDefaultIOSDevice()
+}
+
+export function getDevice(platform: 'ios', deviceName?: string): Promise<SimulatorInfo>
+export function getDevice(platform: 'android', deviceName?: string): Promise<AndroidDeviceInfo>
+export async function getDevice(
+  platform: 'ios' | 'android',
+  deviceName?: string,
+): Promise<SimulatorInfo | AndroidDeviceInfo> {
+  if (platform === 'android') {
+    return getAndroidDevice(deviceName)
+  }
+
+  return getIOSDevice(deviceName)
 }

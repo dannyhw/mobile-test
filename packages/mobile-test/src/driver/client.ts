@@ -11,6 +11,10 @@ import type {
   StatusResponse,
   ViewHierarchyResponse,
 } from './protocol.js'
+import {
+  looksLikeAndroidViewHierarchy,
+  normalizeAndroidViewHierarchy,
+} from './android-view-hierarchy.js'
 import { log } from '../logger.js'
 
 export class DriverClient {
@@ -60,7 +64,15 @@ export class DriverClient {
   async viewHierarchy(bundleId?: string): Promise<ViewHierarchyResponse> {
     return log.time('driver.viewHierarchy', async () => {
       const query = bundleId ? `?bundleId=${encodeURIComponent(bundleId)}` : ''
-      return this.get(`/viewHierarchy${query}`)
+      const res = await this.fetch(`/viewHierarchy${query}`, 'viewHierarchy')
+      const contentType = res.headers.get('content-type')
+      const body = await res.text()
+
+      if (looksLikeAndroidViewHierarchy(contentType, body)) {
+        return normalizeAndroidViewHierarchy(body, bundleId)
+      }
+
+      return JSON.parse(body) as ViewHierarchyResponse
     })
   }
 

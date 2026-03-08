@@ -12,6 +12,8 @@ describe('launch config resolution', () => {
     setTestConfig({
       iosBundleId: undefined,
       iosScheme: undefined,
+      androidAppId: undefined,
+      androidScheme: undefined,
     })
   })
 
@@ -97,6 +99,8 @@ describe('openUrl config resolution', () => {
     setTestConfig({
       iosBundleId: undefined,
       iosScheme: undefined,
+      androidAppId: undefined,
+      androidScheme: undefined,
     })
   })
 
@@ -123,6 +127,7 @@ describe('android launch config resolution', () => {
   beforeEach(() => {
     setTestConfig({
       androidAppId: undefined,
+      androidScheme: undefined,
     })
   })
 
@@ -153,6 +158,18 @@ describe('android launch config resolution', () => {
     })
   })
 
+  it('uses the configured Android scheme when composing a path URL', () => {
+    setTestConfig({
+      androidAppId: 'com.example.android',
+      androidScheme: 'exampleapp',
+    })
+
+    expect(resolveAndroidLaunchConfig({ path: '/form' })).toEqual({
+      bundleId: 'com.example.android',
+      url: 'exampleapp:///form',
+    })
+  })
+
   it('throws when no Android app ID is configured or provided', () => {
     expect(() => resolveAndroidLaunchConfig()).toThrow(
       'No Android app ID configured. Configure app.android or pass a bundle ID override.'
@@ -161,6 +178,13 @@ describe('android launch config resolution', () => {
 })
 
 describe('android openUrl config resolution', () => {
+  beforeEach(() => {
+    setTestConfig({
+      androidAppId: undefined,
+      androidScheme: undefined,
+    })
+  })
+
   it('accepts a full URL string without using config', () => {
     expect(resolveAndroidOpenUrlConfig('exampleapp://form')).toBe('exampleapp://form')
   })
@@ -173,7 +197,13 @@ describe('android openUrl config resolution', () => {
 
   it('throws when a path is provided without a scheme', () => {
     expect(() => resolveAndroidOpenUrlConfig({ path: '/form' })).toThrow(
-      'No Android URL scheme configured. Pass a full URL or provide { scheme } with { path }.'
+      'No Android URL scheme configured. Configure app.android.scheme or pass a full URL / { scheme }.'
     )
+  })
+
+  it('uses the configured Android scheme for openUrl path inputs', () => {
+    setTestConfig({ androidScheme: 'exampleapp' })
+
+    expect(resolveAndroidOpenUrlConfig({ path: '/form' })).toBe('exampleapp:///form')
   })
 })
