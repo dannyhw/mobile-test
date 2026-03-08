@@ -20,6 +20,7 @@ const defaults = {
   iosBundleId: undefined as string | undefined,
   iosScheme: undefined as string | undefined,
   androidAppId: undefined as string | undefined,
+  androidScheme: undefined as string | undefined,
 }
 
 function getConfig() {
@@ -57,6 +58,7 @@ export function getAndroidAppConfig() {
   const config = getConfig()
   return {
     appId: config.androidAppId,
+    scheme: config.androidScheme,
   }
 }
 

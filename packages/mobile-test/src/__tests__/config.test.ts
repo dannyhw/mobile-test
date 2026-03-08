@@ -56,7 +56,23 @@ describe('defineConfig', () => {
       },
     })
 
-    expect(config.app.android).toBe('com.example.android')
+    expect(config.app.android).toEqual({ appId: 'com.example.android' })
+  })
+
+  it('supports structured Android app config', () => {
+    const config = defineConfig({
+      app: {
+        android: {
+          appId: 'com.example.android',
+          scheme: 'exampleapp',
+        },
+      },
+    })
+
+    expect(config.app.android).toEqual({
+      appId: 'com.example.android',
+      scheme: 'exampleapp',
+    })
   })
 
   it('supports project targets', () => {

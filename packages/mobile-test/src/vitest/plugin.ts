@@ -50,7 +50,8 @@ export function mobileTestPlugin(config?: MobileTestConfig) {
       process.env.__MOBILE_TEST_SCREENSHOTS_DIR = resolved.screenshots.dir
       process.env.__MOBILE_TEST_IOS_BUNDLE_ID = resolved.app.ios?.bundleId ?? ''
       process.env.__MOBILE_TEST_IOS_SCHEME = resolved.app.ios?.scheme ?? ''
-      process.env.__MOBILE_TEST_ANDROID_APP_ID = resolved.app.android ?? ''
+      process.env.__MOBILE_TEST_ANDROID_APP_ID = resolved.app.android?.appId ?? ''
+      process.env.__MOBILE_TEST_ANDROID_SCHEME = resolved.app.android?.scheme ?? ''
 
       if (resolved.screenshots.updateBaselines || process.env.UPDATE_SCREENSHOTS === 'true') {
         process.env.UPDATE_SCREENSHOTS = 'true'

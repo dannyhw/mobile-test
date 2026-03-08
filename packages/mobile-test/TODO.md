@@ -1,12 +1,12 @@
-# Phase 3 Step 3: Android View Hierarchy Normalization
+# Phase 3 Step 4: Cross-Platform Test Config
 
 ## Goal
 
-Continue Phase 3 from `../../plan/phase-3-android.md`: add Android `/viewHierarchy` support and normalize the dumped accessibility tree into the existing `ElementHandle` shape so element APIs and matchers can run on Android.
+Continue Phase 3 from `../../plan/phase-3-android.md`: make the shared config and Vitest setup feel first-class for iOS and Android so the same suite can be selected and run across multiple projects/devices without platform-specific setup hacks.
 
 ## Next Focus
 
-- [ ] Scope the Android hierarchy dump format and normalization mapping from Phase 3 M5 before changing the runtime surface.
-- [ ] Implement Android `/viewHierarchy` in the instrumentation driver.
-- [ ] Normalize Android XML attributes into the shared `ElementHandle` model.
-- [ ] Prove at least one Android element-driven flow against the normalized tree.
+- [ ] Scope the minimal config changes needed from Phase 3 M4 without breaking the current iOS default path.
+- [ ] Add cross-platform app config support for per-platform bundle IDs/app IDs.
+- [ ] Support project-style runtime selection so shared suites can target both iOS and Android devices cleanly.
+- [ ] Prove at least one shared test configuration path that can select Android without relying on ad hoc env wiring.

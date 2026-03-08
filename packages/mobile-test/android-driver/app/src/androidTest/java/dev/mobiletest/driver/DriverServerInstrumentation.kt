@@ -67,6 +67,7 @@ private class MobileTestHttpServer(
 
                 session.method == Method.GET && session.uri == "/deviceInfo" -> handleDeviceInfo()
                 session.method == Method.GET && session.uri == "/screenshot" -> handleScreenshot()
+                session.method == Method.GET && session.uri == "/viewHierarchy" -> handleViewHierarchy()
 
                 session.method == Method.POST && session.uri == "/tap" -> handleTap(parseJsonBody(session))
                 session.method == Method.POST && session.uri == "/swipe" -> handleSwipe(parseJsonBody(session))
@@ -105,6 +106,16 @@ private class MobileTestHttpServer(
         return newFixedLengthResponse(
             Response.Status.OK,
             "image/png",
+            ByteArrayInputStream(bytes),
+            bytes.size.toLong(),
+        )
+    }
+
+    private fun handleViewHierarchy(): Response {
+        val bytes = dumpViewHierarchyWithRetry()
+        return newFixedLengthResponse(
+            Response.Status.OK,
+            "application/xml",
             ByteArrayInputStream(bytes),
             bytes.size.toLong(),
         )
@@ -150,11 +161,8 @@ private class MobileTestHttpServer(
 
     private fun handleLaunchApp(body: JSONObject): Response {
         val bundleId = body.getString("bundleId")
-        val launchIntent = targetContext.packageManager.getLaunchIntentForPackage(bundleId)
-            ?: error("No launcher intent found for package $bundleId")
-
-        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        targetContext.startActivity(launchIntent)
+        val activity = resolveLaunchActivity(bundleId)
+        uiDevice.executeShellCommand("am start -W -n $activity")
         return emptyResponse()
     }
 
@@ -217,6 +225,20 @@ private class MobileTestHttpServer(
         }
     }
 
+    private fun dumpViewHierarchyWithRetry(retriesRemaining: Int = 1): ByteArray {
+        return try {
+            AndroidViewHierarchy.dump(uiDevice, instrumentation.uiAutomation)
+        } catch (error: Throwable) {
+            if (retriesRemaining <= 0) {
+                throw error
+            }
+
+            Log.w(TAG, "Retrying Android hierarchy dump after failure", error)
+            SystemClock.sleep(500)
+            dumpViewHierarchyWithRetry(retriesRemaining - 1)
+        }
+    }
+
     private fun parseJsonBody(session: IHTTPSession): JSONObject {
         val files = mutableMapOf<String, String>()
         session.parseBody(files)
@@ -248,6 +270,24 @@ private class MobileTestHttpServer(
                 }
             }
         }
+    }
+
+    private fun resolveLaunchActivity(bundleId: String): String {
+        val output = uiDevice.executeShellCommand("cmd package resolve-activity --brief $bundleId")
+        val lines = output
+            .lineSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toList()
+
+        for (index in lines.indices.reversed()) {
+            val line = lines[index]
+            if (line.contains('/')) {
+                return line
+            }
+        }
+
+        error("No launcher activity found for package $bundleId")
     }
 }
 

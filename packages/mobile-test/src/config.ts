@@ -3,14 +3,19 @@ export interface IOSAppConfig {
   scheme?: string
 }
 
+export interface AndroidAppConfig {
+  appId?: string
+  scheme?: string
+}
+
 export interface AppConfig {
   ios?: string | IOSAppConfig
-  android?: string
+  android?: string | AndroidAppConfig
 }
 
 export interface ResolvedAppConfig {
   ios?: IOSAppConfig
-  android?: string
+  android?: AndroidAppConfig
 }
 
 export interface ProjectConfig {
@@ -62,8 +67,11 @@ export function defineConfig(config: MobileTestConfig): ResolvedConfig {
   } else if (iosConfig) {
     app.ios = { ...iosConfig }
   }
-  if (config.app?.android) {
-    app.android = config.app.android
+  const androidConfig = config.app?.android
+  if (typeof androidConfig === 'string') {
+    app.android = { appId: androidConfig }
+  } else if (androidConfig) {
+    app.android = { ...androidConfig }
   }
 
   return {

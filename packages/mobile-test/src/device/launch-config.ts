@@ -91,19 +91,20 @@ export function resolveAndroidLaunchConfig(
     bundleId,
     url: resolveDeepLinkUrl(
       options,
-      { scheme: undefined },
-      'No Android URL scheme configured. Pass a full URL or provide { scheme } with { path }.',
+      defaults,
+      'No Android URL scheme configured. Configure app.android.scheme or pass a full URL / { scheme }.',
       { allowEmpty: true },
     ),
   }
 }
 
 export function resolveAndroidOpenUrlConfig(input: string | OpenUrlOptions): string {
+  const defaults = getAndroidAppConfig()
   const options = typeof input === 'string' ? { url: input } : input
   return resolveDeepLinkUrl(
     options,
-    { scheme: undefined },
-    'No Android URL scheme configured. Pass a full URL or provide { scheme } with { path }.',
+    defaults,
+    'No Android URL scheme configured. Configure app.android.scheme or pass a full URL / { scheme }.',
     { allowEmpty: false },
   )!
 }

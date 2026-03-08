@@ -10,6 +10,10 @@ export default defineConfig({
           bundleId: "com.dannyhw.exampleapp",
           scheme: "exampleapp",
         },
+        android: {
+          appId: "com.dannyhw.exampleapp",
+          scheme: "exampleapp",
+        },
       },
       logLevel: "debug",
       screenshots: { dir: "./.screenshots" },

@@ -25,7 +25,8 @@ const screenshotsDir = process.env.__MOBILE_TEST_SCREENSHOTS_DIR
 const iosBundleId = process.env.__MOBILE_TEST_IOS_BUNDLE_ID
 const iosScheme = process.env.__MOBILE_TEST_IOS_SCHEME
 const androidAppId = process.env.__MOBILE_TEST_ANDROID_APP_ID
-if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId) {
+const androidScheme = process.env.__MOBILE_TEST_ANDROID_SCHEME
+if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId || androidScheme) {
   setTestConfig({
     ...(actionTimeout ? { actionTimeout: Number(actionTimeout) } : {}),
     ...(logLevel ? { logLevel } : {}),
@@ -33,6 +34,7 @@ if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || a
     ...(iosBundleId ? { iosBundleId } : {}),
     ...(iosScheme ? { iosScheme } : {}),
     ...(androidAppId ? { androidAppId } : {}),
+    ...(androidScheme ? { androidScheme } : {}),
   })
 }
 if (logLevel) {
