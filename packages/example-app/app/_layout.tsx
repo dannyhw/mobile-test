@@ -10,7 +10,7 @@ import { LogBox, useColorScheme } from "react-native";
 LogBox.ignoreAllLogs(true);
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)/counter/index",
+  initialRouteName: "(tabs)",
 };
 
 export default function RootLayout() {
@@ -31,7 +31,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
         <Stack.Screen
-          name="(storybook)/index"
+          name="storybook/index"
           options={{ title: "Storybook", headerShown: false }}
         />
       </Stack>

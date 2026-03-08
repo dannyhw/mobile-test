@@ -20,7 +20,14 @@ export interface ResolvedAppConfig {
 
 export interface ProjectConfig {
   name: string
-  device: string
+  device?: string
+  platform?: 'ios' | 'android'
+}
+
+export interface ResolvedProjectConfig {
+  name: string
+  device?: string
+  platform: 'ios' | 'android'
 }
 
 export interface ScreenshotConfig {
@@ -42,7 +49,7 @@ export interface MobileTestConfig {
 
 export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots' | 'logLevel'>> {
   app: ResolvedAppConfig
-  projects?: ProjectConfig[]
+  projects?: ResolvedProjectConfig[]
   screenshots: Required<ScreenshotConfig>
   logLevel: 'silent' | 'info' | 'debug'
 }
@@ -74,9 +81,14 @@ export function defineConfig(config: MobileTestConfig): ResolvedConfig {
     app.android = { ...androidConfig }
   }
 
+  const projects = config.projects?.map(project => ({
+    ...project,
+    platform: project.platform ?? 'ios',
+  }))
+
   return {
     app,
-    projects: config.projects,
+    projects,
     screenshots: { ...defaults.screenshots, ...config.screenshots },
     timeout: config.timeout ?? defaults.timeout,
     actionTimeout: config.actionTimeout ?? defaults.actionTimeout,
