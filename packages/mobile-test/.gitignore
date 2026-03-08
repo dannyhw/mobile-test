@@ -4,4 +4,6 @@ screenshots/latest/
 screenshots/diff/
 ios-driver/build/
 ios-driver/MobileTestDriver.xcodeproj/
+android-driver/.gradle/
+android-driver/app/build/
 .npmrc

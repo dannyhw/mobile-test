@@ -1,3 +1,0 @@
-dev.mobiletest.driver.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme
