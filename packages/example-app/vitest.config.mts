@@ -1,6 +1,9 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vitest/config";
-import { defineConfig as defineMobileTestConfig, mobileTestProjects } from "mobile-test";
+import {
+  defineConfig as defineMobileTestConfig,
+  mobileTestProjects,
+} from "mobile-test";
 
 const mobileTest = defineMobileTestConfig({
   app: {
@@ -17,7 +20,7 @@ const mobileTest = defineMobileTestConfig({
     {
       name: "ios-simulator",
       platform: "ios",
-      device: "iPhone 16",
+      device: "iPhone 17",
     },
     {
       name: "android-emulator",

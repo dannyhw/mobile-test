@@ -10,7 +10,7 @@ import { LogBox, useColorScheme } from "react-native";
 LogBox.ignoreAllLogs(true);
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "(tabs)/(counter)/index",
 };
 
 export default function RootLayout() {

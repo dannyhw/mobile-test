@@ -22,15 +22,17 @@ describe('AndroidDevice', () => {
   it('launches using the configured Android app ID when no override is provided', async () => {
     setTestConfig({ androidAppId: 'com.example.android' })
 
-    mockExeca.mockImplementation(async (_command, args) => {
-      if (args.includes('resolve-activity')) {
-        return {
-          stdout: 'priority=0 preferredOrder=0 match=0x108000\ncom.example.android/.MainActivity',
-        } as any
+    mockExeca.mockImplementation(((_command: string | URL, args?: readonly string[]) => {
+      const commandArgs = args ?? []
+
+      if (commandArgs.includes('resolve-activity')) {
+        return createExecaResult(
+          'priority=0 preferredOrder=0 match=0x108000\ncom.example.android/.MainActivity',
+        )
       }
 
-      return { stdout: '' } as any
-    })
+      return createExecaResult('')
+    }) as any)
 
     const device = new AndroidDevice('emulator-5554', 'Pixel 9 Pro')
     await device.launch()
@@ -94,6 +96,44 @@ describe('AndroidDevice', () => {
         'android.intent.action.VIEW',
         '-d',
         'exampleapp:///form',
+        '-p',
+        'com.example.android',
+      ],
+      undefined,
+    )
+  })
+
+  it('launches directly with a VIEW intent when given an Android deep link', async () => {
+    setTestConfig({
+      androidAppId: 'com.example.android',
+      androidScheme: 'exampleapp',
+    })
+    mockExeca.mockResolvedValue({ stdout: '' } as any)
+
+    const device = new AndroidDevice('emulator-5554', 'Pixel 9 Pro')
+    await device.launch({ path: '/storybook?STORYBOOK_STORY_ID=ui-listrowscard--default' })
+
+    expect(mockExeca).toHaveBeenNthCalledWith(
+      1,
+      'adb',
+      ['-s', 'emulator-5554', 'shell', 'am', 'force-stop', 'com.example.android'],
+      undefined,
+    )
+    expect(mockExeca).toHaveBeenNthCalledWith(
+      2,
+      'adb',
+      [
+        '-s',
+        'emulator-5554',
+        'shell',
+        'am',
+        'start',
+        '-W',
+        '-a',
+        'android.intent.action.VIEW',
+        '-d',
+        'exampleapp:///storybook?STORYBOOK_STORY_ID=ui-listrowscard--default',
+        '-p',
         'com.example.android',
       ],
       undefined,
@@ -135,3 +175,7 @@ describe('AndroidDevice', () => {
     )
   })
 })
+
+function createExecaResult(stdout: string | Uint8Array) {
+  return Promise.resolve({ stdout }) as any
+}

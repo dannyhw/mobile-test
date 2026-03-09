@@ -4,7 +4,8 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "moduleResolution": "bundler"
   },
   "include": [
     "**/*.ts",
@@ -12,6 +13,7 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     ".rnstorybook/**/*.ts",
-    ".rnstorybook/**/*.tsx"
+    ".rnstorybook/**/*.tsx",
+    "vitest.config.mts"
   ]
 }

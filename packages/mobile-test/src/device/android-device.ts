@@ -33,16 +33,21 @@ export class AndroidDevice implements Device {
         } catch {
           // Ignore termination failures when the app is not already running.
         }
-        await this.client.launchApp(bundleId)
       } else {
         await this.terminate(bundleId)
-        await this.startApp(bundleId)
       }
 
       setActiveBundleId(bundleId)
 
       if (url) {
         await this.openResolvedUrl(url, bundleId)
+        return
+      }
+
+      if (this.client) {
+        await this.client.launchApp(bundleId)
+      } else {
+        await this.startApp(bundleId)
       }
     })
   }
@@ -161,7 +166,7 @@ export class AndroidDevice implements Device {
   private async openResolvedUrl(url: string, bundleId?: string): Promise<void> {
     const args = ['am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', url]
     if (bundleId) {
-      args.push(bundleId)
+      args.push('-p', bundleId)
     }
 
     await this.adbShell(args)

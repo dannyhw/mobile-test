@@ -1,9 +1,9 @@
 import { useTheme } from "@react-navigation/native";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-export const unstable_settings = {
-  initialRouteName: "counter",
-};
+// export const unstable_settings = {
+//   initialRouteName: "counter/index",
+// };
 
 export default function TabLayout() {
   const { colors, dark } = useTheme();
@@ -22,7 +22,7 @@ export default function TabLayout() {
           : undefined
       }
     >
-      <NativeTabs.Trigger name="counter">
+      <NativeTabs.Trigger name="(counter)">
         <NativeTabs.Trigger.Label>Counter</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="number.circle" md="pin" />
       </NativeTabs.Trigger>

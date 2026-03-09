@@ -7,8 +7,13 @@ const StorybookUIRoot = view.getStorybookUI({
     getItem: AsyncStorage.getItem,
     setItem: AsyncStorage.setItem,
   },
-  CustomUIComponent: ({ children }) => (
-    <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>
+  CustomUIComponent: ({ children, story }) => (
+    <SafeAreaView
+      style={{ flex: 1 }}
+      testID={story?.id ?? "storybook-root-container"}
+    >
+      {children}
+    </SafeAreaView>
   ),
   enableWebsockets: true,
 });

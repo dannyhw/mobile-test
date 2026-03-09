@@ -7,6 +7,7 @@ cd "$SCRIPT_DIR"
 DERIVED_DATA_PATH="./build"
 DESTINATION="${DESTINATION:-generic/platform=iOS Simulator}"
 OUTPUT_DIR="../dist/ios-driver"
+PROJECT_FILE="MobileTestDriver.xcodeproj"
 
 echo "Building iOS driver for simulator..."
 
@@ -14,8 +15,13 @@ rm -rf "$DERIVED_DATA_PATH"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR/Debug-iphonesimulator"
 
+if [ ! -d "$PROJECT_FILE" ]; then
+  echo "Generating Xcode project from project.yml..."
+  xcodegen generate
+fi
+
 xcodebuild clean build-for-testing \
-  -project MobileTestDriver.xcodeproj \
+  -project "$PROJECT_FILE" \
   -scheme DriverApp \
   -destination "$DESTINATION" \
   -derivedDataPath "$DERIVED_DATA_PATH" \

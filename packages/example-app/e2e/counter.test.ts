@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("Counter App", () => {
   it("shows the initial screen", async () => {
-    await device.launch({ path: "/counter" });
+    await device.launch({ path: "/" });
     await device.waitForAnimationToEnd();
 
     // Verify the counter screen is visible.
@@ -17,7 +17,9 @@ describe("Counter App", () => {
     await device.launch({ path: "/counter" });
     await device.waitForAnimationToEnd();
 
-    await element(by.id("counter-scroll")).scrollTo(element(by.id("click-button")));
+    await element(by.id("counter-scroll")).scrollTo(
+      element(by.id("click-button")),
+    );
     await expect(element(by.id("click-button"))).toBeVisible();
 
     // Tap the button

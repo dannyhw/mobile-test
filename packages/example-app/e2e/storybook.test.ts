@@ -1,10 +1,9 @@
 import { buildIndex } from "@storybook/react-native/node";
-import { device } from "mobile-test";
+import { by, device, element } from "mobile-test";
 import { describe, expect, it } from "vitest";
 
 const STORYBOOK_CONFIG_PATH = ".rnstorybook";
 const STORYBOOK_CHANNEL_URL = "http://localhost:7007/send-event";
-const STORY_SETTLE_DELAY_MS = 30;
 
 async function getStoryIds(): Promise<string[]> {
   const index = await buildIndex({ configPath: STORYBOOK_CONFIG_PATH });
@@ -59,10 +58,23 @@ async function setCurrentStory(storyId: string): Promise<void> {
 describe("Storybook", () => {
   it("visits every story and captures screenshots", async () => {
     const storyIds = await getStoryIds();
+
     expect(storyIds.length).toBeGreaterThan(0);
 
-    await device.launch({ path: "/storybook" });
+    const firstStoryId = storyIds.at(0)!;
+
+    await device.launch({
+      path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
+    });
+    await device.openUrl({
+      path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
+    });
+
     await device.waitForAnimationToEnd();
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    await expect(element(by.id(firstStoryId))).toBeVisible();
 
     for (const [index, storyId] of storyIds.entries()) {
       console.log(
@@ -70,9 +82,8 @@ describe("Storybook", () => {
       );
 
       await setCurrentStory(storyId);
-      await new Promise((resolve) =>
-        setTimeout(resolve, STORY_SETTLE_DELAY_MS),
-      );
+
+      await expect(element(by.id(storyId))).toBeVisible();
 
       await expect(device).toMatchScreenshot(`storybook-${storyId}`);
     }
