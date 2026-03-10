@@ -15,6 +15,7 @@ const sampleHierarchy = `<?xml version="1.0" encoding="UTF-8"?>
     <node index="0" package="com.android.systemui" class="android.widget.TextView" text="12:30" bounds="[40,20][160,60]" clickable="false" enabled="true" focused="false" selected="false" />
   </node>
   <node index="1" package="com.example.app" class="android.widget.FrameLayout" bounds="[0,80][1080,2400]" clickable="false" enabled="true" focused="false" selected="false">
+    <node index="0" package="com.example.app" class="android.widget.EditText" text="Name" hintText="Name" resource-id="com.example.app:id/form-name" bounds="[80,120][420,220]" clickable="true" enabled="true" focused="false" selected="false" />
     <node index="0" package="com.example.app" class="android.widget.TextView" text="1" resource-id="com.example.app:id/counter" bounds="[80,220][280,300]" clickable="false" enabled="true" focused="false" selected="false" />
     <node index="1" package="com.example.app" class="android.widget.Button" text="Increment" resource-id="com.example.app:id/click-button" bounds="[80,340][420,460]" clickable="true" enabled="true" focused="false" selected="false" />
   </node>
@@ -26,14 +27,20 @@ describe('normalizeAndroidViewHierarchy', () => {
 
     expect(hierarchy.elementType).toBe(47)
     expect(hierarchy.frame).toEqual({ X: 0, Y: 80, Width: 1080, Height: 2320 })
-    expect(hierarchy.children).toHaveLength(2)
+    expect(hierarchy.children).toHaveLength(3)
     expect(hierarchy.children?.[0]).toMatchObject({
+      identifier: 'form-name',
+      label: 'Name',
+      value: undefined,
+      placeholderValue: 'Name',
+    })
+    expect(hierarchy.children?.[1]).toMatchObject({
       identifier: 'counter',
       label: '1',
       value: '1',
       elementType: 9,
     })
-    expect(hierarchy.children?.[1]).toMatchObject({
+    expect(hierarchy.children?.[2]).toMatchObject({
       identifier: 'click-button',
       label: 'Increment',
       value: 'Increment',
@@ -62,8 +69,10 @@ describe('DriverClient.viewHierarchy', () => {
     const client = new DriverClient('http://localhost:22087')
     const hierarchy = await client.viewHierarchy('com.example.app')
 
-    expect(hierarchy.children?.[1]?.identifier).toBe('click-button')
-    expect(hierarchy.children?.[1]?.frame).toEqual({ X: 80, Y: 340, Width: 340, Height: 120 })
+    expect(hierarchy.children?.[0]?.identifier).toBe('form-name')
+    expect(hierarchy.children?.[0]?.value).toBeUndefined()
+    expect(hierarchy.children?.[2]?.identifier).toBe('click-button')
+    expect(hierarchy.children?.[2]?.frame).toEqual({ X: 80, Y: 340, Width: 340, Height: 120 })
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:22087/viewHierarchy?bundleId=com.example.app',
     )
