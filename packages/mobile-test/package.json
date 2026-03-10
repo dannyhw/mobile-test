@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "type": "module",
   "description": "TypeScript-first mobile testing framework focused on screenshot testing",
-  "files": ["dist", "matchers.d.ts"],
+  "files": [
+    "dist",
+    "matchers.d.ts"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -38,7 +41,7 @@
   "devDependencies": {
     "@types/node": "^25.3.3",
     "tsup": "^8.4.0",
-    "typescript": "^5.7.3",
-    "vitest": "^4.0.0"
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.18"
   }
 }
