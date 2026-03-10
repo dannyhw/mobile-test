@@ -14,7 +14,7 @@ describe("Counter App", () => {
   });
 
   it("increments the counter on tap", async () => {
-    await device.launch({ path: "/counter" });
+    await device.launch({ path: "/" });
     await device.waitForAnimationToEnd();
 
     await element(by.id("counter-scroll")).scrollTo(

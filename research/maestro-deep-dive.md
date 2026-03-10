@@ -287,6 +287,8 @@ For some operations, Maestro bypasses gRPC and uses ADB directly:
 - `stopApp`: `shell("am force-stop $appId")`
 - `clearAppState`: `shell("pm clear $appId")`
 
+For text clearing, Maestro's Android instrumentation path falls back to repeated delete key presses (`uiDevice.pressDelete()`) based on the requested erase count.
+
 ### How View Hierarchy Works (Android)
 
 1. gRPC `viewHierarchy` request

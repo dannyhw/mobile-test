@@ -2,12 +2,15 @@ package dev.mobiletest.driver
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.SystemClock
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject2
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONObject
 import org.junit.Test
@@ -19,6 +22,8 @@ import kotlin.math.roundToInt
 
 private const val DEFAULT_PORT = 22087
 private const val TAG = "MobileTestDriver"
+private const val CLEAR_TEXT_SETTLE_MS = 150L
+private const val DEFAULT_CLEAR_TEXT_DELETE_COUNT = 64
 
 @RunWith(AndroidJUnit4::class)
 class DriverServerInstrumentation {
@@ -72,6 +77,7 @@ private class MobileTestHttpServer(
                 session.method == Method.POST && session.uri == "/tap" -> handleTap(parseJsonBody(session))
                 session.method == Method.POST && session.uri == "/swipe" -> handleSwipe(parseJsonBody(session))
                 session.method == Method.POST && session.uri == "/typeText" -> handleTypeText(parseJsonBody(session))
+                session.method == Method.POST && session.uri == "/clearText" -> handleClearText(parseJsonBody(session))
                 session.method == Method.POST && session.uri == "/launchApp" -> handleLaunchApp(parseJsonBody(session))
                 session.method == Method.POST && session.uri == "/terminateApp" -> handleTerminateApp(parseJsonBody(session))
 
@@ -155,6 +161,36 @@ private class MobileTestHttpServer(
             typeCharacter(character)
             SystemClock.sleep(50)
         }
+
+        return emptyResponse()
+    }
+
+    private fun handleClearText(body: JSONObject): Response {
+        val request = parseClearTextRequest(body)
+        val target = findClearTextTarget(request)
+
+        // Prefer direct accessibility text replacement when the field exposes it.
+        if (target != null) {
+            try {
+                target.setText("")
+                SystemClock.sleep(CLEAR_TEXT_SETTLE_MS)
+                if (findClearTextTarget(request)?.getText().isNullOrEmpty()) {
+                    return emptyResponse()
+                }
+            } catch (error: Throwable) {
+                Log.w(TAG, "Direct setText(\"\") clear failed, falling back to delete key events", error)
+            }
+        }
+
+        // Maestro uses repeated delete presses on Android; keep that as the fallback path.
+        uiDevice.pressKeyCode(android.view.KeyEvent.KEYCODE_MOVE_END)
+        SystemClock.sleep(50)
+
+        val deleteCount = max(target?.getText()?.length ?: 0, DEFAULT_CLEAR_TEXT_DELETE_COUNT)
+        repeat(deleteCount) {
+            uiDevice.pressDelete()
+        }
+        SystemClock.sleep(CLEAR_TEXT_SETTLE_MS)
 
         return emptyResponse()
     }
@@ -272,6 +308,57 @@ private class MobileTestHttpServer(
         }
     }
 
+    private fun parseClearTextRequest(body: JSONObject): ClearTextRequest {
+        return ClearTextRequest(
+            bundleId = body.optString("bundleId").ifBlank { null },
+            identifier = body.optString("identifier").ifBlank { null },
+            rect = Rect(
+                body.optDouble("x", 0.0).roundToInt(),
+                body.optDouble("y", 0.0).roundToInt(),
+                body.optDouble("x", 0.0).roundToInt() + body.optDouble("width", 0.0).roundToInt(),
+                body.optDouble("y", 0.0).roundToInt() + body.optDouble("height", 0.0).roundToInt(),
+            ),
+        )
+    }
+
+    private fun findClearTextTarget(request: ClearTextRequest): UiObject2? {
+        val candidates = buildList {
+            if (!request.identifier.isNullOrBlank()) {
+                if (!request.bundleId.isNullOrBlank()) {
+                    addAll(uiDevice.findObjects(By.res(request.bundleId, request.identifier)))
+                }
+                addAll(uiDevice.findObjects(By.res(request.identifier)))
+            }
+            addAll(uiDevice.findObjects(By.focused(true)))
+        }
+
+        return candidates.maxByOrNull { scoreClearTextCandidate(it, request) }
+    }
+
+    private fun scoreClearTextCandidate(candidate: UiObject2, request: ClearTextRequest): Int {
+        var score = 0
+        val bounds = candidate.visibleBounds
+        if (Rect.intersects(bounds, request.rect)) {
+            score += 1_000
+        }
+        if (request.rect.contains(bounds.centerX(), bounds.centerY())) {
+            score += 250
+        }
+        if (candidate.isFocused) {
+            score += 500
+        }
+
+        val resourceName = candidate.resourceName
+        if (!request.identifier.isNullOrBlank() && !resourceName.isNullOrBlank()) {
+            val expectedSuffix = "/${request.identifier}"
+            if (resourceName == request.identifier || resourceName.endsWith(expectedSuffix)) {
+                score += 10_000
+            }
+        }
+
+        return score
+    }
+
     private fun resolveLaunchActivity(bundleId: String): String {
         val output = uiDevice.executeShellCommand("cmd package resolve-activity --brief $bundleId")
         val lines = output
@@ -290,6 +377,12 @@ private class MobileTestHttpServer(
         error("No launcher activity found for package $bundleId")
     }
 }
+
+private data class ClearTextRequest(
+    val bundleId: String?,
+    val identifier: String?,
+    val rect: Rect,
+)
 
 private fun Bitmap.toPng(): ByteArray {
     val stream = ByteArrayOutputStream()

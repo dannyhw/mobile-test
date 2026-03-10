@@ -62,9 +62,10 @@ function normalizeNode(node: XmlNode): ElementHandle {
   const text = nonEmpty(node.attributes.text)
   const contentDescription = nonEmpty(node.attributes['content-desc'])
   const hintText = nonEmpty(node.attributes.hintText)
+  const editable = isEditableClass(node.attributes.class)
   const checked = parseBoolean(node.attributes.checked)
-  const label = contentDescription ?? text ?? hintText ?? ''
-  const value = text ?? (node.attributes.checkable ? String(Number(checked)) : undefined)
+  const value = normalizeValue(text, hintText, editable, node.attributes.checkable, checked)
+  const label = contentDescription ?? value ?? hintText ?? text ?? ''
   const children = node.children
     .filter(child => child.name === 'node')
     .map(normalizeNode)
@@ -178,6 +179,37 @@ function mapElementType(className?: string): number {
   }
 
   return IOS_ELEMENT_TYPES.unknown
+}
+
+function isEditableClass(className?: string): boolean {
+  const normalizedClassName = className?.toLowerCase() ?? ''
+  return (
+    normalizedClassName.includes('edittext') ||
+    normalizedClassName.includes('textfield') ||
+    normalizedClassName.includes('textinput')
+  )
+}
+
+function normalizeValue(
+  text: string | undefined,
+  hintText: string | undefined,
+  editable: boolean,
+  checkable?: string,
+  checked = false,
+): string | undefined {
+  if (editable && text && hintText && text === hintText) {
+    return undefined
+  }
+
+  if (text !== undefined) {
+    return text
+  }
+
+  if (checkable) {
+    return String(Number(checked))
+  }
+
+  return undefined
 }
 
 function parseBounds(bounds?: string): Record<string, number> {
