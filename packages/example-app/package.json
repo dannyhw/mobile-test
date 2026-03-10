@@ -31,7 +31,6 @@
     "@storybook/react-native-ui-lite": "10.3.0-next.6",
     "expo": "~55.0.5",
     "expo-constants": "~55.0.7",
-    "expo-dev-client": "^55.0.13",
     "expo-font": "~55.0.4",
     "expo-haptics": "~55.0.8",
     "expo-image": "~55.0.6",

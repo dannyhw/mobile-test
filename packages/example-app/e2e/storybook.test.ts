@@ -66,13 +66,12 @@ describe("Storybook", () => {
     await device.launch({
       path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
     });
-    await device.openUrl({
-      path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
-    });
 
     await device.waitForAnimationToEnd();
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await device.openUrl({
+      path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
+    });
 
     await expect(element(by.id(firstStoryId))).toBeVisible();
 

@@ -14,6 +14,7 @@
     "expo-env.d.ts",
     ".rnstorybook/**/*.ts",
     ".rnstorybook/**/*.tsx",
-    "vitest.config.mts"
+    "vitest.config.mts",
+    "node_modules/mobile-test/matchers.d.ts"
   ]
 }

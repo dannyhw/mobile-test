@@ -2,7 +2,10 @@
   "name": "mobile-test-monorepo",
   "private": true,
   "scripts": {
-    "example": "bun -F example-app start"
+    "example": "cd packages/example-app && bun start",
+    "test:android": "cd packages/example-app && bun test:e2e:android",
+    "test:ios": "cd packages/example-app && bun test:e2e",
+    "build:drivers": "cd packages/mobile-test && bun build:drivers"
   },
   "workspaces": [
     "packages/*"
