@@ -5,7 +5,7 @@
     "example": "cd packages/example-app && bun start",
     "test:android": "cd packages/example-app && bun test:e2e:android",
     "test:ios": "cd packages/example-app && bun test:e2e",
-    "build:drivers": "cd packages/mobile-test && bun build:drivers"
+    "build:all": "cd packages/mobile-test && bun build:drivers && bun run build"
   },
   "workspaces": [
     "packages/*"
