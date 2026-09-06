@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ElementHandle, Frame } from '../element/types.js'
-import { toFrame, frameCenter } from '../element/types.js'
+import { toFrame } from '../element/types.js'
 import { log } from '../logger.js'
 import { snapshotToTree, type FlatSnapshotNode } from './snapshot-tree.js'
 import {
@@ -30,6 +30,7 @@ const DEFAULT_SWIPE_DURATION_MS = 300
 const ADB_KEYEVENT_BATCH = 24
 const RETRY_ATTEMPTS = 3
 const RETRY_DELAY_MS = 750
+const ALERT_DISMISS_SETTLE_MS = 200
 
 export interface AgentDeviceBackendOptions {
   /** agent-device session name. All clients sharing it act on the same device claim. */
@@ -297,10 +298,13 @@ export class AgentDeviceBackend implements Backend {
   }
 
   async replaceText(target: ElementHandle, text: string): Promise<void> {
-    const center = frameCenter(toFrame(target.frame))
-    await this.call('fill', () =>
-      this.client.interactions.fill({ ...this.sel, x: center.x, y: center.y, text }),
-    )
+    // agent-device's `fill` does this in one call but costs ~4s on iOS;
+    // delete keys plus `type` take about a second. The caller has focused
+    // the field already.
+    await this.clearText(target)
+    if (text.length > 0) {
+      await this.typeText(text)
+    }
   }
 
   async clearText(target: ElementHandle): Promise<void> {
@@ -413,7 +417,7 @@ export class AgentDeviceBackend implements Backend {
         log.debug(`accept "Open in" alert failed: ${errorMessage(err)}`)
         return
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, ALERT_DISMISS_SETTLE_MS))
     }
   }
 

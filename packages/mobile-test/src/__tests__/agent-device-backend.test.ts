@@ -215,9 +215,11 @@ describe('AgentDeviceBackend', () => {
     expect(client.capture.screenshot.mock.calls[1][0].stabilize).toBeUndefined()
   })
 
-  it('replaces text with fill at the element center', async () => {
+  it('replaces text by deleting the current value and typing the new one', async () => {
     await backendWith(client).replaceText(handle('old'), 'new')
-    expect(client.interactions.fill).toHaveBeenCalledWith({ platform: 'ios', udid: 'UDID-1', x: 60, y: 40, text: 'new' })
+    expect(client.interactions.fill).not.toHaveBeenCalled()
+    expect(client.interactions.type).toHaveBeenNthCalledWith(1, { platform: 'ios', udid: 'UDID-1', text: '\b\b\b' })
+    expect(client.interactions.type).toHaveBeenNthCalledWith(2, { platform: 'ios', udid: 'UDID-1', text: 'new' })
   })
 
   it('detects the iOS keyboard from the raw snapshot and uses keyboard status on Android', async () => {

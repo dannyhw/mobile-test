@@ -29,6 +29,10 @@ function fakeBackend(overrides: Record<string, unknown> = {}): Record<string, Re
     clearText: vi.fn().mockResolvedValue(undefined),
     replaceText: vi.fn().mockResolvedValue(undefined),
     typeText: vi.fn().mockResolvedValue(undefined),
+    keyboardVisible: vi.fn().mockResolvedValue(true),
+    // Focus polling re-snapshots; an empty tree means "not focused yet" and
+    // the keyboard check above ends the wait.
+    snapshot: vi.fn().mockResolvedValue({ identifier: '', label: '', frame: {}, elementType: 0, enabled: true, selected: false, hasFocus: false, children: [] }),
     ...overrides,
   }
 }

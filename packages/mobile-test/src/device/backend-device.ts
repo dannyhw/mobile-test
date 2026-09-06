@@ -13,6 +13,7 @@ import {
 
 const KEYBOARD_POLL_INTERVAL = 100
 const KEYBOARD_HIDE_TIMEOUT = 2_000
+const STABLE_FRAMES_REQUIRED = 2
 
 /**
  * The single `Device` implementation. Platform differences live in the
@@ -68,20 +69,26 @@ export class BackendDevice implements Device {
     return log.time('device.waitForAnimationToEnd', async () => {
       const timeout = options?.timeout ?? 2_000
       const threshold = options?.threshold ?? 0.01
-      const interval = options?.interval ?? 200
+      const interval = options?.interval ?? 100
 
       // Screenshot diffing, not the backend's `waitStable`: agent-device's
       // accessibility-based "stable" rarely settles on React Native screens
-      // (it timed out on 6 of 8 calls in the example suite), while two
+      // (it timed out on 6 of 8 calls in the example suite), while a few
       // identical screenshots take well under a second.
+      //
+      // Two consecutive unchanged frames are required: a launch splash sits
+      // still for a moment before the content appears, and a single
+      // unchanged pair would call that "settled".
       const start = Date.now()
       let previous = (await this.backend.screenshot({ fast: true })).png
+      let stableFrames = 0
 
       while (Date.now() - start < timeout) {
         await new Promise(r => setTimeout(r, interval))
         const current = (await this.backend.screenshot({ fast: true })).png
         const diff = await compareBuffers(previous, current)
-        if (diff <= threshold) return
+        stableFrames = diff <= threshold ? stableFrames + 1 : 0
+        if (stableFrames >= STABLE_FRAMES_REQUIRED) return
         previous = current
       }
       // Timeout silently returns (matches Maestro behavior)

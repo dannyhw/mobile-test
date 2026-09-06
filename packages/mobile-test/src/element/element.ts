@@ -9,7 +9,11 @@ import { compareBuffers } from '../screenshot/compare.js'
 import { cropToFrame } from '../screenshot/crop.js'
 import { log } from '../logger.js'
 
-const POLL_INTERVAL = 200
+const POLL_INTERVAL = 100
+const SETTLE_INTERVAL = 100
+const SCROLL_STEP_SETTLE_MS = 100
+const FOCUS_KEYBOARD_TIMEOUT_MS = 1_000
+const STABLE_FRAMES_REQUIRED = 2
 const MIN_VISIBLE_PERCENTAGE = 0.1
 const VIEWPORT_GESTURE_MARGIN = 24
 const END_OF_SCROLL_DIFF_THRESHOLD = 0.5
@@ -126,7 +130,7 @@ export class Element {
       for (let i = 0; i < maxScrolls; i++) {
         if (await target.isVisible()) return
         await this.swipe(direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right')
-        await new Promise(r => setTimeout(r, 300))
+        await new Promise(r => setTimeout(r, SCROLL_STEP_SETTLE_MS))
       }
       throw new Error(`Could not find ${target.locator} after scrolling ${maxScrolls} times`)
     })
@@ -182,11 +186,13 @@ export class Element {
   ): Promise<Buffer> {
     const start = Date.now()
     let previous = await this.captureForMotionDiff(backend, frame)
+    let stableFrames = 0
     while (Date.now() - start < timeout) {
-      await new Promise(r => setTimeout(r, 200))
+      await new Promise(r => setTimeout(r, SETTLE_INTERVAL))
       const current = await this.captureForMotionDiff(backend, frame)
       const diff = await compareBuffers(previous, current)
-      if (diff <= 0.01) return current
+      stableFrames = diff <= 0.01 ? stableFrames + 1 : 0
+      if (stableFrames >= STABLE_FRAMES_REQUIRED) return current
       previous = current
     }
     return previous
@@ -229,9 +235,20 @@ export class Element {
     const el = await this.resolve()
     if (el.hasFocus) return el
 
+    const backend = getBackend()
     const center = frameCenter(toFrame(el.frame))
-    await getBackend().tap(center.x, center.y)
-    await new Promise(r => setTimeout(r, 300))
+    await backend.tap(center.x, center.y)
+
+    // Wait for focus rather than sleeping a fixed amount: Android reports
+    // `focused` on the node (its test IME never shows a keyboard), iOS shows
+    // the keyboard but never reports focus. Give up after a short timeout.
+    const start = Date.now()
+    while (Date.now() - start < FOCUS_KEYBOARD_TIMEOUT_MS) {
+      const fresh = await this.tryResolve()
+      if (fresh?.hasFocus) return fresh
+      if (await backend.keyboardVisible().catch(() => true)) break
+      await new Promise(r => setTimeout(r, POLL_INTERVAL))
+    }
     return el
   }
 
