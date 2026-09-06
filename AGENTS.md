@@ -44,3 +44,7 @@ Useful commands:
 ## Shared Project Requirements & Context
 
 See `PROJECT_REQUIREMENTS_AND_CONTEXT.md`.
+
+## Releasing
+
+Publishing to npm is automated with Changesets (see README "Releasing"). When you change `packages/mobile-test` in a user-facing way, add a changeset file in `.changeset/` (run `bun changeset`, or write the markdown file directly with a `"mobile-test": patch|minor|major` frontmatter). Never bump `version` in package.json by hand.
