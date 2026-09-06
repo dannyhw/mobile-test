@@ -438,3 +438,62 @@ Consequences in the framework:
 - The remaining lever is agent-device's `open` (0.8s vs 0.3s for simctl,
   about 7s per run over 14 launches) and the number of relaunches the tests
   ask for.
+
+## Where a 90s iOS run goes inside agent-device (and what upstream could change)
+
+Source: agent-device's own per-request log for the full example suite
+(`~/.agent-device/sessions/mobile-test_ios-simulator_*/events.ndjson`, run of
+2026-09-06 after `c11cca4`, 13 tests, 14 launches) plus the retained runner's
+`runner.log` (XCTest activity between COMMAND_ACCEPTED and COMMAND_COMPLETED)
+and the runner Swift sources shipped in `dist/apple/runner`.
+
+| | |
+|---|---|
+| Wall clock | 87.5s |
+| Inside agent-device requests | 75.6s (257 requests) |
+| Framework side (odiff, polling, matching) | 11.9s, median gap between requests 18ms |
+
+By request type:
+
+| Request | n | avg | total | What it is |
+|---|---|---|---|---|
+| screenshot | 118 | 154ms | 18.2s | `simctl io screenshot` + density normalize. Raw `simctl io screenshot` alone measures 140-160ms, so this is simctl's cost, not the daemon's. The old in-process `XCUIScreen` capture was 70-90ms. |
+| first snapshot after a relaunch | 13 | 1372ms (±5ms) | 17.8s | Not app boot: the runner tries the XCTest tree backend, which hits its 1.0s timeout while the app is loading its bundle (`SNAPSHOT_BACKEND_FAILED backend=tree ... timed out`), then falls back to the private AX backend (~0.3s, returns the full content tree). The constancy is the timeout. |
+| open (relaunch + deep link) | 15 | 789ms | 11.8s | terminate, launch, URL, foreground confirmation, runner target reset. A raw `simctl launch` returns in ~0.3s. |
+| snapshot (steady state) | 87 | 113ms | 9.9s | ~30-40ms of every snapshot (and every tap) is a blocking-modal check: XCTest descendant queries for `Alert` and `Sheet` before the real query. |
+| alert get | 1 | 4688ms | 4.7s | Issued by our `openUrl` path after opening a URL onto the running app. No alert was present; `resolveBlockingSystemModal` polled until its deadline before answering "alert not found". |
+| press | 11 | 390ms | 4.3s | In-runner: `postSnapshotInteractionDelay` sleep of 200ms (we always snapshot right before tapping), plus 250ms `firstInteractionAfterActivateDelay` on the first interaction after a relaunch, then XCTest's coordinate tap (~300ms incl. two "wait for app to idle"). |
+| type | 4 | 950ms | 3.8s | Runner text-entry phases total ~550ms for 5 chars; the other ~400-450ms is the same two stabilization sleeps. |
+| gesture (pan) | 3 | 919ms | 2.8s | 300ms of requested drag time + XCTest press-and-drag overhead. |
+| keyboard dismiss / enter | 2 | 826ms | 1.7s | `dismiss` is documented unsupported on iOS but still takes ~540ms to fail; `enter` is a real return-key tap. |
+
+Requests to make upstream, by measured saving per run:
+
+1. **Stabilization sleeps should be optional.** `postSnapshotInteractionDelay`
+   (0.2s) and `firstInteractionAfterActivateDelay` (0.25s) in
+   `RunnerTests+Lifecycle.swift` protect agent workflows; a deterministic test
+   client pays 200ms on every interaction after a snapshot and 250ms per launch.
+   ~6-7s/run here.
+2. **Cheaper screenshots.** Offer the in-runner `XCUIScreen` capture (already
+   present as `captureWithRunner` fallback) as the preferred path, or a
+   runner-side "wait until N consecutive frames match" with an ignore band, so
+   motion detection does not ship 118 PNGs. Up to ~9s/run.
+3. **`open` overhead.** 0.8s vs 0.3s for `simctl launch`; launching with the
+   URL in one step and trusting the launch pid instead of polling foreground
+   would recover most of it. ~7s/run.
+4. **First snapshot after relaunch.** Go private-AX first (or poll) right after
+   an external relaunch instead of waiting out the 1s XCTest tree timeout.
+   ~0.3s/launch, ~4s/run; the app itself needs ~1.1s so the rest is real.
+5. **Blocking-modal check per command.** Cache or skip the `Alert`/`Sheet`
+   descendant queries between commands when nothing changed. ~4s/run.
+6. **`alert get` should not block.** A query with no alert present should
+   answer in one snapshot's time, not poll to a deadline.
+7. **`keyboard dismiss` on iOS** should fail immediately (it always does).
+8. **Tap floor.** XCTest's coordinate tap is ~300ms with idle waits; HID event
+   injection (as idb does) would be ~50ms. Larger change, ~3s/run here.
+9. Android (correctness, not speed): hint text reported as value; a real
+   clear/`fill("")` would replace our adb `KEYCODE_DEL` batches (1.6s/clear).
+
+Ours to fix without upstream: stop calling `alert get` after `openUrl` and
+look for the "Open" button in the snapshot instead (4.7s/run); skip
+`keyboard dismiss` on iOS and go straight to the return key (0.5s/call).

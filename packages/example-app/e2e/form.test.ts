@@ -11,9 +11,6 @@ describe("Form", () => {
   });
 
   it("clears a text input through the native driver flow", async () => {
-    await device.launch({ path: "/form" });
-    await device.waitForAnimationToEnd();
-
     await element(by.id("form-name")).type("Alice");
     await element(by.id("form-email")).type("alice@example.com");
     await element(by.id("form-terms")).tap();
