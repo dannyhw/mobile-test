@@ -162,9 +162,9 @@ Releases are automated with [Changesets](https://github.com/changesets/changeset
 
    Pick the bump type and describe the change. Commit the generated `.changeset/*.md` file with your PR. Docs-only or CI-only changes can skip this (or use `bun changeset --empty`).
 
-2. When changesets land on `main`, the workflow opens (or updates) a **Version Packages** PR that bumps versions and writes `CHANGELOG.md` entries.
+2. When changesets land on `main`, the workflow opens (or updates) a **chore: changeset version** PR that bumps versions and writes `CHANGELOG.md` entries.
 
-3. Merging that PR triggers the workflow again. It builds, packs, and publishes `mobile-test` to npm, then creates a git tag and GitHub release.
+3. Merging that PR triggers the workflow again. It builds and publishes `mobile-test` to npm, then creates a git tag and GitHub release.
 
 Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC), so no npm token is stored in the repo. The package's trusted publisher on npmjs.com must be configured as:
 
@@ -176,7 +176,7 @@ Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishe
 | Workflow filename | `release.yml` |
 | Environment       | _(blank)_     |
 
-The repository also needs **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests** enabled so the workflow can open the Version Packages PR.
+The repository also needs **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests** enabled so the workflow can open the version PR.
 
 ## Scope
 

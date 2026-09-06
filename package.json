@@ -6,7 +6,9 @@
     "test:android": "cd packages/example-app && bun test:e2e:android",
     "test:ios": "cd packages/example-app && bun test:e2e",
     "build:all": "cd packages/mobile-test && bun run build",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
   },
   "workspaces": [
     "packages/*"
