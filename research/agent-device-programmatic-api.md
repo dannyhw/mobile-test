@@ -360,3 +360,28 @@ To file against callstack/agent-device once confirmed on the latest version.
 > Repro: open any app with an empty `TextInput` that has a placeholder, run
 > `agent-device snapshot --raw --json --platform android`, compare the node
 > before and after `fill`.
+
+## Storybook e2e on the agent-device backend
+
+`e2e/storybook.test.ts` passes on iOS (9 stories, ~6s with Metro, ~20s via
+deep links) and Android (~35-40s). Three ways to switch stories, chosen at
+runtime:
+
+1. Metro running with `withStorybook`: its channel server on port 7007
+   accepts `setCurrentStory` events (`POST /send-event`).
+2. No Metro: the test starts the same server itself with
+   `createChannelServer` from `@storybook/react-native/node`. The app connects
+   to the host IP baked into `storybook.requires.ts` at bundle time.
+3. If no client connects within 3s (stale baked host IP, as happens when the
+   machine changes network after a release build), stories are switched by
+   deep-linking `/storybook?STORYBOOK_STORY_ID=<id>`, which
+   `@storybook/react-native` handles itself.
+
+`send-event` returns `success: true` even with zero connected clients, so
+the test checks `wss.clients.size` on its own server rather than trusting the
+response. Story switches need `waitForAnimationToEnd()` before capturing (the
+preview decorator updates the backgrounds global on mount).
+
+Release vs Debug builds render a few pixels differently (~0.001% of the
+frame on the form screen). The example config sets
+`screenshots.maxDiffPercentage: 0.01` so one set of baselines serves both.

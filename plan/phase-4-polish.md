@@ -1,5 +1,7 @@
 # Phase 4: Polish — Detailed Plan
 
+> **Status (2026-09-06):** Not started. Already covered elsewhere: `packages/mobile-test/README.md` (setup, API, config, limitations) and the root README "Try It" section. Still open: CLI, HTML report, CI/CD example, a docs site.
+
 > Goal: Make the framework ready for public release with CLI tooling, reporting, CI guidance, and documentation.
 
 ---
@@ -73,7 +75,7 @@ Visual report showing baseline vs latest vs diff for each screenshot test.
 - [ ] Public release polish work started
 - [ ] CLI entrypoint implemented
 - [ ] Report generation implemented
-- [ ] Release-facing docs drafted
+- [x] Release-facing docs drafted (package README; no docs site yet)
 
 ### Verification Snapshot
 

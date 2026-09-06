@@ -13,8 +13,8 @@
     "test:e2e:all": "vitest run",
     "test:e2e:update": "UPDATE_SCREENSHOTS=true vitest run --project ios-simulator",
     "storybook-generate": "sb-rn-get-stories",
-    "storybook": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --dev-client",
-    "storybook:ios": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo run:ios"
+    "storybook": "expo start --dev-client",
+    "storybook:ios": "expo run:ios"
   },
   "dependencies": {
     "@babel/core": "^7.29.0",

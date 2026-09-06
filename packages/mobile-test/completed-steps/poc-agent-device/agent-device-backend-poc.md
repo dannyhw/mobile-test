@@ -30,7 +30,7 @@ Findings and timings live in `../../research/agent-device-programmatic-api.md`.
 ## M3 — iOS parity
 
 - [x] counter, form, list, animations pass on iPhone 17 (baselines regenerated for the Dynamic Island).
-- [ ] Storybook test (needs the Storybook dev build + channel server; not backend related).
+- [x] Storybook test: passes on iOS and Android, with Metro (channel server) and without (self-started channel server or deep links).
 - [x] Timing comparison against the native driver: 60.3s native vs 45.9s agent-device (the env override was removed with the native backend).
 
 ## M4 — Android parity
@@ -43,7 +43,7 @@ Findings and timings live in `../../research/agent-device-programmatic-api.md`.
 - [x] Delete `ios-driver/`, `android-driver/`, `scripts/build-drivers.sh`, `src/driver/`, `src/device/detect.ts`, `src/device/{ios,android}-device.ts`, `src/backend/legacy-driver.ts` and their tests.
 - [x] Removed `build:drivers` scripts. `execa` stays for `simctl status_bar` and adb key events.
 - [x] Update `ROADMAP.md`, package `CLAUDE.md`/`AGENTS.md`, README.
-- [ ] Move this file to `completed-steps/poc-agent-device/`.
+- [x] Moved to `completed-steps/poc-agent-device/` on 2026-09-06.
 
 ## M6 — Ready to try
 
@@ -53,5 +53,4 @@ Findings and timings live in `../../research/agent-device-programmatic-api.md`.
 - [x] `by.type(number)` removed; `by.role(string)` is the replacement.
 - [x] e2e coverage for `openUrl` on a running app, `hideKeyboard`, `pressHome` + relaunch, `setLocation`, element-level screenshots and masks (`e2e/device.test.ts`, `e2e/screenshots.test.ts`): 12/12 on iOS, 11/12 on Android (hint gap).
 - [x] `packages/mobile-test/README.md` quick start + API reference; root README "Try it".
-- [ ] Storybook test (needs the Storybook dev build).
-- [ ] Android hint-as-value gap (upstream; issue draft in the research doc).
+- [ ] Android hint-as-value gap: blocked on agent-device (issue draft in `research/agent-device-programmatic-api.md`). Tracked in the POC plan's known gaps, not here.

@@ -1,6 +1,6 @@
 # POC — agent-device as the native backend
 
-> Status: done. iOS suite passes; Android passes except one assertion blocked by an agent-device gap (see research doc). Native drivers removed.
+> Status: done and hardened (2026-09-06). Native drivers removed. iOS 13/13, Android 12/13 on the example-app suite; the one Android failure is an agent-device gap (empty `EditText` reports its hint as its value, issue draft in the research doc). Storybook runs with Metro (channel server) or without (self-started channel server / deep links). Draft PR: https://github.com/dannyhw/mobile-test/pull/9
 > Companion research: [research/agent-device-programmatic-api.md](../research/agent-device-programmatic-api.md)
 
 ## The idea in one paragraph

@@ -1,5 +1,7 @@
 # Phase 3: Android Support — Detailed Plan
 
+> **Status (2026-09-06):** Complete. The Kotlin UIAutomator driver, adb device detection and view-hierarchy normalization described here were removed on 2026-09-06 and replaced by the agent-device backend. The shared example-app suite was validated on that backend: 12/13 on a Pixel 9 emulator, the remaining failure being agent-device reporting an empty `EditText`'s hint as its value.
+
 > Goal: Add Android emulator/device support using the same HTTP/JSON protocol as iOS. A single test file should run on both platforms.
 
 ---
@@ -114,7 +116,7 @@ Android's `dumpWindowHierarchy()` returns XML with different attribute names tha
 - [x] M3: Port forwarding and connection
 - [x] M4: Cross-platform test config
 - [x] M5: View hierarchy normalization
-- [ ] Phase 3 validation complete
+- [x] Phase 3 validation complete (on the agent-device backend, 2026-09-06)
 
 ### Current Stage
 

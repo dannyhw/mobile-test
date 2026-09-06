@@ -365,31 +365,42 @@ Built-in, first-class, not an afterthought:
 
 Detailed plans for each phase live in [`plan/`](./plan/).
 
-> **agent-device POC (done):** the in-house Swift/Kotlin drivers were replaced by agent-device's Node client while keeping the TS API and Vitest runner. See [plan/poc-agent-device-backend.md](./plan/poc-agent-device-backend.md).
+### Current status (2026-09-06)
+
+- Phases 1-3 are complete. Their native drivers were later replaced by the
+  agent-device backend ([plan/poc-agent-device-backend.md](./plan/poc-agent-device-backend.md)),
+  which is merged into this branch and is the only backend.
+- Example-app suite: iOS 13/13 (counter, form, list, animations, device,
+  screenshots, storybook); Android 12/13, the one failure being an
+  agent-device gap (empty `EditText` reports its hint as its value).
+- Unit tests: 100 passing. Package docs: `packages/mobile-test/README.md`.
+- Phase 4 (CLI, HTML report, CI guidance) has not started; the package is
+  usable from a git checkout but is not published.
 
 1. **Phase 1 — iOS Simulator MVP** ✅ [plan](./plan/phase-1-ios-mvp.md)
-   - Swift XCTest driver with HTTP server (tap, type, screenshot, element tree) — since replaced by agent-device
-   - TypeScript client that talks to driver over HTTP
-   - Basic device management via `xcrun simctl`
-   - Screenshot capture and odiff comparison
-   - Vitest integration with `toMatchScreenshot()`
-   - Basic locators: `by.id()`, `by.text()`
+   - Device management, screenshot capture and odiff comparison, Vitest
+     integration with `toMatchScreenshot()`, `by.id()` / `by.text()`
+   - The Swift XCTest driver and its HTTP client built here were removed in
+     favour of agent-device
 
-2. **Phase 2 — Full iOS + Screenshot Workflow** 🔜 [plan](./plan/phase-2-full-ios.md)
-   - Region masking for dynamic content
-   - Element-level screenshots
-   - Additional locators (`by.type()`, `by.label()`, chaining)
-   - Additional actions (`doubleTap()`, `replaceText()`, `scrollTo()`)
-   - Additional assertions (`toBeEnabled()`, `toHaveAttribute()`)
+2. **Phase 2 — Full iOS + Screenshot Workflow** ✅ [plan](./plan/phase-2-full-ios.md)
+   - Region masking, element-level screenshots
+   - Locators `by.label()`, `by.role()` (replaced `by.type()`), `atIndex()`, `withAncestor()`
+   - Actions `doubleTap()`, `longPress()`, `replaceText()`, `clear()`, `scrollTo()`, `scrollToEnd()`
+   - Assertions `toBeEnabled()`, `toHaveValue()`; `waitForAnimationToEnd()`
 
 3. **Phase 3 — Android Support** ✅ [plan](./plan/phase-3-android.md)
-   - Kotlin UIAutomator driver with HTTP server (same API as iOS) — since replaced by agent-device
-   - ADB-based device management
-   - Port forwarding setup
-   - Cross-platform test running
+   - Emulator selection, cross-platform config and projects, shared test files
+   - The Kotlin UIAutomator driver built here was removed in favour of
+     agent-device; validation of the shared suite was completed on the
+     agent-device backend
 
-4. **Phase 4 — Polish** [plan](./plan/phase-4-polish.md)
+4. **agent-device backend** ✅ [plan](./plan/poc-agent-device-backend.md)
+   - `Backend` seam, `AgentDeviceBackend`, session-based Vitest setup
+   - Native drivers deleted; docs and baselines updated; timings recorded
+
+5. **Phase 4 — Polish** ⏳ not started [plan](./plan/phase-4-polish.md)
    - CLI tool (`bunx mobile-test init`, `bunx mobile-test run`)
    - HTML report with screenshot diffs
    - CI/CD guidance and examples
-   - Documentation
+   - Documentation beyond the package README

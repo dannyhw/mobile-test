@@ -28,7 +28,12 @@ const mobileTest = defineMobileTestConfig({
     },
   ],
   logLevel: "debug",
-  screenshots: { dir: "./.screenshots" },
+  screenshots: {
+    dir: "./.screenshots",
+    // Release and Debug builds render a handful of pixels differently
+    // (font hinting); allow that so the same baselines serve both.
+    maxDiffPercentage: 0.01,
+  },
 });
 
 export default defineConfig({

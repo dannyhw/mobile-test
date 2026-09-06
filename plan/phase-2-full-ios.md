@@ -1,5 +1,7 @@
 # Phase 2: Full iOS + Screenshot Workflow — Detailed Plan
 
+> **Status (2026-09-06):** Complete. Everything in the checklist below still exists, now on the agent-device backend. `by.type(number)` was replaced by `by.role(string)`; `element.clear()` sends delete keys instead of calling the removed native `/clearText` endpoint.
+
 > Goal: Complete the iOS experience with region masking, element-level screenshots, more locators, actions, and assertions. After this phase, the iOS side is production-ready.
 
 ---

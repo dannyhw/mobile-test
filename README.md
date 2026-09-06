@@ -85,18 +85,39 @@ is in [`plan/poc-agent-device-backend.md`](./plan/poc-agent-device-backend.md).
 The package README has the setup, config and API reference:
 [`packages/mobile-test/README.md`](./packages/mobile-test/README.md).
 
-To run the example app suite from this repo:
-
 ```bash
 bun install
 cd packages/mobile-test && bun run build
 cd ../example-app
-bun expo run:ios --configuration Release --device "iPhone 17"   # installs a Release build on the simulator
-bun run test:e2e                                                 # iOS simulator
-bun run test:e2e:android                                         # booted Android emulator
 ```
 
-Release builds embed the JS bundle, so Metro does not need to be running.
+Two ways to put the example app on a device. Either works with every test;
+only one can be installed at a time because they share a bundle id.
+
+**Release build (self-contained).** The JS bundle is embedded, so nothing else
+needs to run. Best for CI and for a quick look.
+
+```bash
+bun expo run:ios --configuration Release --device "iPhone 17"
+bun expo run:android --variant release
+bun run test:e2e            # iOS simulator
+bun run test:e2e:android    # booted Android emulator
+```
+
+**Debug build + Metro (fast iteration).** Build once, then edit the app or the
+tests and rerun without rebuilding.
+
+```bash
+bun expo run:ios --device "iPhone 17"   # once
+bun start                               # keep Metro running
+bun run test:e2e
+```
+
+The Storybook test works with both: Metro's Storybook plugin hosts the story
+channel server, and without Metro the test starts that server itself
+(`createChannelServer` from `@storybook/react-native/node`) or falls back to
+deep links.
+
 The first run on a fresh simulator builds agent-device's iOS runner with Xcode
 and takes a few minutes; later runs reuse it.
 

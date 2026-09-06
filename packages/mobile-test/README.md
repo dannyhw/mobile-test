@@ -86,6 +86,12 @@ The first run on a fresh simulator builds agent-device's iOS runner with
 Xcode, which takes a few minutes. Later runs reuse the cached runner. In CI,
 run `agent-device prepare ios-runner` once after booting the simulator.
 
+Any installed build of your app works: a release build with the bundle
+embedded, or a debug build served by Metro while you iterate. Screenshot
+baselines are shared between the two; the builds render a few pixels
+differently, so set `screenshots.maxDiffPercentage` to a small value (the
+example app uses `0.01`) if you switch between them.
+
 ## API
 
 ### Device
