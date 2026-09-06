@@ -209,8 +209,8 @@ in the pnpm store.
 
 ## M0 spike results (iOS simulator, iPhone 17, 2026-09-06)
 
-Run with `bun run scripts/spike-agent-device.ts "iPhone 17"` in
-`packages/mobile-test`, plus CLI probes with the package-local binary.
+Gathered with a throwaway probe script (since replaced by `scripts/check-device.ts`)
+and CLI probes with the package-local binary.
 
 | Question | Answer |
 |---|---|

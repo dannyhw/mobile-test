@@ -10,7 +10,7 @@ Findings and timings live in `../../research/agent-device-programmatic-api.md`.
 
 ## M0 — Spike
 
-- [x] `scripts/spike-agent-device.ts` answers units, off-screen nodes, latency, clear, double tap, deep links, keyboard, sessions.
+- [x] a throwaway probe script (since replaced by `scripts/check-device.ts`) answers units, off-screen nodes, latency, clear, double tap, deep links, keyboard, sessions.
 
 ## M1 — Backend seam
 

@@ -163,6 +163,17 @@ first run.
 | `actionTimeout` | `5000` | ms to wait for an element or assertion |
 | `logLevel` | `info` | `debug` prints per-call timings |
 
+## Troubleshooting
+
+From a checkout of this repo, `packages/mobile-test` has a quick health check
+that lists devices, opens your app through agent-device, and times a
+snapshot and a screenshot:
+
+```bash
+bun run check-device -- --platform ios --app com.example.app
+bun run check-device -- --platform android --app com.example.app --device emulator-5554
+```
+
 ## How it works
 
 - Each Vitest project opens one agent-device session, claims the selected

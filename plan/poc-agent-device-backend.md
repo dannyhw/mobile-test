@@ -160,7 +160,7 @@ agent-device selector semantics. Two follow-ups once it works:
 
 ### M0 — Spike (half a day, no framework changes)
 
-A throwaway script `packages/mobile-test/scripts/spike-agent-device.ts` run
+A throwaway script a throwaway probe script (since replaced by `scripts/check-device.ts`) run
 against the booted iPhone 17 and the example app. It must answer:
 
 - [x] Rect units: are `rect` values in points on iOS and dp on Android? Do they
