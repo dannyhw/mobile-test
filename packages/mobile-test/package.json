@@ -3,6 +3,18 @@
   "version": "0.0.1",
   "type": "module",
   "description": "TypeScript-first mobile testing framework focused on screenshot testing",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dannyhw/mobile-test.git",
+    "directory": "packages/mobile-test"
+  },
+  "homepage": "https://github.com/dannyhw/mobile-test#readme",
+  "bugs": {
+    "url": "https://github.com/dannyhw/mobile-test/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
     "matchers.d.ts"
