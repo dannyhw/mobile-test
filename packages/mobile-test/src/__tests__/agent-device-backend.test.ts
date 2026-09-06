@@ -264,6 +264,19 @@ describe('AgentDeviceBackend', () => {
     })
   })
 
+  it('launch without relaunch keeps the app running and accepts the deep link alert on iOS', async () => {
+    client.command.alert
+      .mockResolvedValueOnce({ data: { message: 'Open in “example-app”?', items: ['Cancel', 'Open'] } })
+      .mockRejectedValue(agentError('COMMAND_FAILED', 'alert not found'))
+
+    await backendWith(client).launchApp('com.example.app', { url: 'example:///list', relaunch: false })
+
+    expect(client.apps.open).toHaveBeenCalledWith({
+      platform: 'ios', udid: 'UDID-1', app: 'com.example.app', relaunch: false, url: 'example:///list',
+    })
+    expect(client.interactions.press.mock.calls.filter(([a]) => a.selector === 'text="Open"')).toHaveLength(1)
+  })
+
   it('accepts stacked "Open in" alerts after opening a URL on iOS', async () => {
     client.command.alert
       .mockResolvedValueOnce({ data: { message: 'Open in “example-app”?', items: ['Cancel', 'Open'] } })

@@ -28,8 +28,10 @@ const LONG_PRESS_THRESHOLD_MS = 500
 const DEFAULT_IOS_PIXEL_DENSITY = 3
 const DEFAULT_SWIPE_DURATION_MS = 300
 const ADB_KEYEVENT_BATCH = 24
-const RETRY_ATTEMPTS = 3
-const RETRY_DELAY_MS = 750
+// The iOS runner reports RUNNER_BUSY while it finishes a capture that
+// exceeded its watchdog (typically a snapshot taken mid-animation); give it
+// increasing room to recover before failing the action.
+const RETRY_DELAYS_MS = [500, 1_000, 2_000, 3_000]
 const ALERT_DISMISS_SETTLE_MS = 200
 
 export interface AgentDeviceBackendOptions {
@@ -359,14 +361,22 @@ export class AgentDeviceBackend implements Backend {
   // ---- Lifecycle -----------------------------------------------------------
 
   async launchApp(bundleId: string, options?: LaunchAppOptions): Promise<void> {
-    await this.call('open', () =>
-      this.client.apps.open({
-        ...this.sel,
-        app: bundleId,
-        relaunch: options?.relaunch ?? true,
-        ...(options?.url ? { url: options.url } : {}),
-      }),
+    const relaunch = options?.relaunch ?? true
+    await log.time('backend.launchApp', () =>
+      this.call('open', () =>
+        this.client.apps.open({
+          ...this.sel,
+          app: bundleId,
+          relaunch,
+          ...(options?.url ? { url: options.url } : {}),
+        }),
+      ),
     )
+    // Without a relaunch, a deep link lands on the running app, which on iOS
+    // shows the system "Open in <app>?" alert.
+    if (!relaunch && options?.url && this.platform === 'ios') {
+      await this.acceptOpenInAppAlerts()
+    }
     this.viewportCache = undefined
   }
 
@@ -459,10 +469,11 @@ export class AgentDeviceBackend implements Backend {
       try {
         return await fn()
       } catch (err) {
-        if (isRetriable(err) && attempt < RETRY_ATTEMPTS) {
+        if (isRetriable(err) && attempt < RETRY_DELAYS_MS.length) {
+          const delay = RETRY_DELAYS_MS[attempt]
           attempt++
-          log.debug(`${operation}: ${errorCode(err)}, retrying (${attempt}/${RETRY_ATTEMPTS}) in ${RETRY_DELAY_MS}ms`)
-          await new Promise(r => setTimeout(r, RETRY_DELAY_MS))
+          log.debug(`${operation}: ${errorCode(err)}, retrying (${attempt}/${RETRY_DELAYS_MS.length}) in ${delay}ms`)
+          await new Promise(r => setTimeout(r, delay))
           continue
         }
         throw wrap(operation, err)

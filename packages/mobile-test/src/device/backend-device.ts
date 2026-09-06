@@ -36,8 +36,9 @@ export class BackendDevice implements Device {
         ? resolveLaunchConfig(bundleIdOrOptions)
         : resolveAndroidLaunchConfig(bundleIdOrOptions)
 
+      const relaunch = typeof bundleIdOrOptions === 'object' ? bundleIdOrOptions.relaunch ?? true : true
       setActiveBundleId(bundleId)
-      await this.backend.launchApp(bundleId, { url, relaunch: true })
+      await this.backend.launchApp(bundleId, { url, relaunch })
     })
   }
 

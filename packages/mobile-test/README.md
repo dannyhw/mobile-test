@@ -99,6 +99,7 @@ example app uses `0.01`) if you switch between them.
 ```ts
 await device.launch()                       // configured app, fresh start
 await device.launch({ path: "/settings" })  // scheme://settings
+await device.launch({ path: "/settings", relaunch: false })  // keep the app running (see below)
 await device.launch({ url: "other://x", bundleId: "com.other.app" })
 await device.openUrl({ path: "/settings" }) // onto the running app
 await device.terminate("com.example.app")
@@ -124,6 +125,13 @@ await el.type("text"); await el.replaceText("text"); await el.clear()
 await el.swipe("up"); await el.scrollTo(target); await el.scrollToEnd("down")
 await el.isVisible(); await el.exists(); await el.getText()
 ```
+
+`device.launch` terminates and restarts the app by default so each test
+starts clean. Pass `relaunch: false` for tests that only navigate: the app
+stays running and the deep link is opened onto it. On Android that is a few
+hundred milliseconds instead of a relaunch. On iOS it saves little: opening a
+URL onto a running app shows the system "Open in app?" alert, which the
+framework accepts, and the route transition still has to settle.
 
 ### Assertions (auto-retry until `actionTimeout`)
 

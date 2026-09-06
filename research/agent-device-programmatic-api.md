@@ -385,3 +385,28 @@ preview decorator updates the backgrounds global on mount).
 Release vs Debug builds render a few pixels differently (~0.001% of the
 frame on the form screen). The example config sets
 `screenshots.maxDiffPercentage: 0.01` so one set of baselines serves both.
+
+## Tap cost, measured properly
+
+Earlier notes implied agent-device made taps ~400ms slower than the native
+driver. Measured directly (2026-09-06):
+
+| Path | Per tap |
+|---|---|
+| Old native driver, `tap()` in its own run log (resolve ~40ms + XCTest tap) | 370-400ms |
+| agent-device `press` via the raw Node client, its own `cost` accounting | 445-453ms wall inside agent-device, 1 runner round trip |
+| agent-device CLI `press ... --cost` | 439-445ms, `real` 0.52s |
+| Framework `backend.tap` in the suite | 436-512ms |
+
+XCTest's tap synthesis is ~350ms on its own; agent-device adds roughly
+100ms, and the framework wrapper a few ms. The first press in a session
+costs two round trips (~950ms).
+
+## `launch({ relaunch: false })` on iOS
+
+Opening a deep link onto the running app costs the same `open` (~0.8s) as
+a relaunch, then the "Open in <app>?" alert has to be accepted, and
+snapshotting during the route transition tripped the runner watchdog
+(`RUNNER_BUSY`) six times in one run. Net: no faster and less stable on iOS,
+so the example tests keep the default. On Android there is no alert and
+`open` with a URL is ~150ms, so it is a real saving there.
