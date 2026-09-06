@@ -4,18 +4,18 @@ import { describe, expect, it } from "vitest";
 describe("Screenshots", () => {
   it("captures an element-level screenshot", async () => {
     await device.launch({ path: "/" });
-    await device.waitForAnimationToEnd();
 
     await element(by.id("click-button")).tap();
     await expect(element(by.id("counter"))).toHaveText("1");
 
     // Cropped to the element's frame (in device pixels).
-    await expect(element(by.id("click-button"))).toMatchScreenshot("increment-button");
+    await expect(element(by.id("click-button"))).toMatchScreenshot(
+      "increment-button",
+    );
   });
 
   it("masks dynamic content", async () => {
     await device.launch({ path: "/form" });
-    await device.waitForAnimationToEnd();
 
     // The status card shows a clock that changes every second; masking it
     // keeps the comparison stable.

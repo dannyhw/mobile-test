@@ -25,7 +25,7 @@ afterAll(() => {
   ownServer = null;
   if (server) {
     server.close();
-    ;(server.options as { server?: { close(): void } }).server?.close();
+    (server.options as { server?: { close(): void } }).server?.close();
   }
 });
 
@@ -105,15 +105,15 @@ async function sendChannelEvent(storyId: string): Promise<void> {
   }
 }
 
-async function setCurrentStory(switcher: StorySwitcher, storyId: string): Promise<void> {
+async function setCurrentStory(
+  switcher: StorySwitcher,
+  storyId: string,
+): Promise<void> {
   if (switcher === "channel") {
     await sendChannelEvent(storyId);
   } else {
     await device.openUrl({ path: `/storybook?STORYBOOK_STORY_ID=${storyId}` });
   }
-  // Story switches re-render (the preview decorator updates the backgrounds
-  // global on mount); capture only once the screen is still.
-  await device.waitForAnimationToEnd();
 }
 
 describe("Storybook", () => {
@@ -127,11 +127,15 @@ describe("Storybook", () => {
     await device.launch({
       path: `/storybook?STORYBOOK_STORY_ID=${firstStoryId}`,
     });
-    await device.waitForAnimationToEnd();
+
     await expect(element(by.id(firstStoryId))).toBeVisible();
 
-    const switcher: StorySwitcher = (await waitForClient()) ? "channel" : "deeplink";
-    console.log(`[storybook-e2e] Channel server: ${channel}; switching stories via ${switcher}`);
+    const switcher: StorySwitcher = (await waitForClient())
+      ? "channel"
+      : "deeplink";
+    console.log(
+      `[storybook-e2e] Channel server: ${channel}; switching stories via ${switcher}`,
+    );
 
     for (const [index, storyId] of storyIds.entries()) {
       console.log(
