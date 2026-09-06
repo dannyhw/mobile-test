@@ -26,8 +26,6 @@
   },
   "scripts": {
     "build": "tsup",
-    "build:android-driver": "./android-driver/build.sh",
-    "build:drivers": "./scripts/build-drivers.sh",
     "dev": "tsup --watch",
     "check-device": "bun run scripts/check-device.ts",
     "test": "vitest run"
