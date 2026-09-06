@@ -1,9 +1,9 @@
 import type { DeviceInfo } from '../device/types.js'
-import type { CompareOptions, ComparisonResult } from './compare.js'
+import type { CompareOptions } from './compare.js'
 import type { Element } from '../element/element.js'
 import { toFrame } from '../element/types.js'
-import { getDriverClient } from '../driver/context.js'
-import { saveLatest, baselineExists, saveBaseline, updateBaseline, ensureDiffDir, resolveBaselinePath } from './baselines.js'
+import { getBackend } from '../backend/context.js'
+import { saveLatest, baselineExists, saveBaseline, ensureDiffDir, resolveBaselinePath } from './baselines.js'
 import { compareScreenshots } from './compare.js'
 
 export interface TakeAndCompareOptions extends CompareOptions {
@@ -28,39 +28,37 @@ export async function takeAndCompare(
   device: DeviceInfo,
   options?: TakeAndCompareOptions,
 ): Promise<ScreenshotResult> {
-  const client = getDriverClient()
+  const backend = getBackend()
   const screenshotsDir = options?.screenshotsDir
 
-  // 1. Resolve mask elements to ignoreRegions
+  // 1. Resolve mask elements (in points) before capturing so the frames match the shot
+  const maskFrames = options?.mask && options.mask.length > 0
+    ? await Promise.all(options.mask.map(async el => toFrame((await el.resolve()).frame)))
+    : []
+  const cropFrame = options?.cropElement
+    ? toFrame((await options.cropElement.resolve()).frame)
+    : undefined
+
+  // 2. Take screenshot via backend (device pixels + scale)
+  const shot = await backend.screenshot()
+  let buffer = shot.png
+  const scale = shot.scale
+
   let ignoreRegions = options?.ignoreRegions
-  if (options?.mask && options.mask.length > 0) {
-    const deviceInfoResp = await client.deviceInfo()
-    const scale = deviceInfoResp.scale
-    const maskRegions = await Promise.all(
-      options.mask.map(async (el) => {
-        const handle = await el.resolve()
-        const frame = toFrame(handle.frame)
-        return {
-          x1: Math.round(frame.x * scale),
-          y1: Math.round(frame.y * scale),
-          x2: Math.round((frame.x + frame.width) * scale),
-          y2: Math.round((frame.y + frame.height) * scale),
-        }
-      })
-    )
+  if (maskFrames.length > 0) {
+    const maskRegions = maskFrames.map(frame => ({
+      x1: Math.round(frame.x * scale),
+      y1: Math.round(frame.y * scale),
+      x2: Math.round((frame.x + frame.width) * scale),
+      y2: Math.round((frame.y + frame.height) * scale),
+    }))
     ignoreRegions = [...(ignoreRegions ?? []), ...maskRegions]
   }
 
-  // 2. Take screenshot via driver
-  let buffer = await client.screenshot()
-
   // 3. Crop to element bounds if requested
-  if (options?.cropElement) {
+  if (cropFrame) {
     const { cropToFrame } = await import('./crop.js')
-    const deviceInfoResp = await client.deviceInfo()
-    const handle = await options.cropElement.resolve()
-    const frame = toFrame(handle.frame)
-    buffer = await cropToFrame(buffer, frame, deviceInfoResp.scale)
+    buffer = await cropToFrame(buffer, cropFrame, scale)
   }
 
   // 4. Save to latest/

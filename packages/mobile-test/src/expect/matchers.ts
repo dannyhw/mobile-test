@@ -5,7 +5,7 @@ import { takeAndCompare, type TakeAndCompareOptions } from '../screenshot/workfl
 import { getActionTimeout, getScreenshotDefaults, getScreenshotsDir } from '../config-context.js'
 import { log } from '../logger.js'
 
-const POLL_INTERVAL = 200
+const POLL_INTERVAL = 100
 
 export function registerMatchers(): void {
   expect.extend({

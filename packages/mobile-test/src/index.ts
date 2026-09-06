@@ -1,7 +1,6 @@
 export { device } from './device/index.js'
 export { setDevice } from './device/index.js'
-export { AndroidDevice } from './device/android-device.js'
-export { IOSDevice } from './device/ios-device.js'
+export { BackendDevice } from './device/backend-device.js'
 export { element } from './element/element.js'
 export { by } from './element/by.js'
 export { defineConfig } from './config.js'
@@ -14,6 +13,8 @@ export type {
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
+  ResolvedScreenshotConfig,
+  ScreenshotConfig,
 } from './config.js'
 export type { Locator } from './element/by.js'
 export type { Element } from './element/element.js'
@@ -21,10 +22,13 @@ export type { ElementHandle, Frame } from './element/types.js'
 export type { CompareOptions, ComparisonResult } from './screenshot/compare.js'
 export { takeAndCompare, type TakeAndCompareOptions, type ScreenshotResult } from './screenshot/workflow.js'
 export { normalizeStatusBar, resetStatusBar } from './screenshot/normalize.js'
-export { DriverClient } from './driver/client.js'
-export { launchDriver } from './driver/installer.js'
-export { setDriverClient } from './driver/context.js'
+export { AgentDeviceBackend, listAgentDevices } from './backend/agent-device.js'
+export type { AgentDeviceBackendOptions, AgentDeviceListedDevice } from './backend/agent-device.js'
+export { setBackend, getBackend, setActiveBundleId, getActiveBundleId } from './backend/context.js'
+export { BackendUnsupportedError } from './backend/types.js'
+export type { Backend, BackendDeviceInfo, ScreenshotCapture, ScreenshotOptions, Platform } from './backend/types.js'
+export { snapshotToTree } from './backend/snapshot-tree.js'
+export type { FlatSnapshotNode } from './backend/snapshot-tree.js'
 export { setTestConfig } from './config-context.js'
 export { log, setLogLevel } from './logger.js'
 export type { LogLevel } from './logger.js'
-export type { DriverProcess, LaunchDriverOptions } from './driver/installer.js'

@@ -18,6 +18,13 @@ export interface OpenUrlOptions {
 
 export interface LaunchOptions extends OpenUrlOptions {
   bundleId?: string
+  /**
+   * Terminate a running instance first so the test starts from a clean app
+   * state (default). With `false`, a running app is brought to the
+   * foreground and the deep link (if any) is opened onto it, which is a few
+   * times faster but keeps whatever state the app is in.
+   */
+  relaunch?: boolean
 }
 
 export interface Device extends DeviceInfo {

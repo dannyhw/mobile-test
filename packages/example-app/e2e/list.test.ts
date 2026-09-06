@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 describe("List", () => {
   it("launches directly to list and scrolls through the current list overview", async () => {
     await device.launch({ path: "/list" });
-    await device.waitForAnimationToEnd();
 
     // Verify the current list summary and first item state
     await expect(element(by.id("list-summary"))).toBeVisible();

@@ -1,5 +1,7 @@
 # Phase 1: iOS Simulator MVP — Detailed Plan
 
+> **Status (2026-09-06):** Complete. The Swift XCTest driver, HTTP client and simctl device detection described here were removed on 2026-09-06 and replaced by the agent-device backend (see `poc-agent-device-backend.md`). The TypeScript API, screenshot workflow and Vitest integration remain as designed.
+
 > Goal: A working end-to-end flow where a developer writes a Vitest test in TypeScript, runs it against a booted iOS simulator, and gets screenshot comparison results.
 
 ---

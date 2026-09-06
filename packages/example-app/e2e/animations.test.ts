@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 describe("Animations", () => {
   it("launches directly to animations and runs animation", async () => {
     await device.launch({ path: "/animations" });
-    await device.waitForAnimationToEnd();
 
     // Verify initial state
     await expect(element(by.id("anim-status"))).toHaveText("idle");

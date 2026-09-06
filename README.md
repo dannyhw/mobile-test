@@ -64,19 +64,62 @@ The project goal is not "beat all of them". It is narrower: learn from them and 
 
 ## Approach
 
-The main architectural direction comes from the research into Maestro and Appium:
+The framework owns the test API, the runner integration and the screenshot
+workflow, and delegates every native interaction to
+[agent-device](https://github.com/callstack/agent-device):
 
-- install a small driver onto the simulator or emulator at runtime
-- let that driver talk to native automation frameworks
-- expose a simple host-side API over HTTP/JSON
-- keep most framework logic in TypeScript
+- agent-device installs its own XCTest runner on iOS simulators and an
+  accessibility snapshot helper on Android, so the app under test needs no
+  rebuild and no SDK
+- the framework talks to it through its typed Node client, behind a small
+  `Backend` interface expressed in the framework's own terms
+- locator matching, auto-waiting, screenshot comparison and Vitest wiring stay
+  in TypeScript
 
-Planned platform approach:
+An earlier iteration shipped its own Swift and Kotlin drivers over HTTP/JSON.
+They were replaced once agent-device covered the same ground; the comparison
+is in [`plan/poc-agent-device-backend.md`](./plan/poc-agent-device-backend.md).
 
-- iOS: an XCTest-based driver that uses XCUITest accessibility APIs and native screenshot capture
-- Android: a UIAutomator-based driver with the same host-side protocol
+## Try It
 
-This is intended to preserve the "no app rebuild for testing" model while still giving test authors a normal TypeScript API on top of Vitest.
+The package README has the setup, config and API reference:
+[`packages/mobile-test/README.md`](./packages/mobile-test/README.md).
+
+```bash
+bun install
+cd packages/mobile-test && bun run build
+cd ../example-app
+```
+
+Two ways to put the example app on a device. Either works with every test;
+only one can be installed at a time because they share a bundle id.
+
+**Release build (self-contained).** The JS bundle is embedded, so nothing else
+needs to run. Best for CI and for a quick look.
+
+```bash
+bun expo run:ios --configuration Release --device "iPhone 17"
+bun expo run:android --variant release
+bun run test:e2e            # iOS simulator
+bun run test:e2e:android    # booted Android emulator
+```
+
+**Debug build + Metro (fast iteration).** Build once, then edit the app or the
+tests and rerun without rebuilding.
+
+```bash
+bun expo run:ios --device "iPhone 17"   # once
+bun start                               # keep Metro running
+bun run test:e2e
+```
+
+The Storybook test works with both: Metro's Storybook plugin hosts the story
+channel server, and without Metro the test starts that server itself
+(`createChannelServer` from `@storybook/react-native/node`) or falls back to
+deep links.
+
+The first run on a fresh simulator builds agent-device's iOS runner with Xcode
+and takes a few minutes; later runs reuse it.
 
 ## Current Status
 
@@ -84,8 +127,8 @@ This repo is still in progress.
 
 - `packages/mobile-test` contains the framework work
 - `packages/example-app` is a small Expo app used for testing and examples
-- the implementation today is centered on the iOS simulator path
-- Android support, CLI polish, reporting, and broader docs are planned next
+- iOS simulators and Android emulators both run the example-app suite
+- CLI polish, reporting, and broader docs are planned next
 
 So the project should be read as active implementation work, not a finished public release.
 

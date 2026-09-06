@@ -69,15 +69,20 @@ function matches(el: ElementHandle, locator: Locator): boolean {
       return text === locator.value
     }
 
-    case 'type':
-      return el.elementType === locator.value
-
     case 'label': {
       const label = el.label || ''
       if (locator.value instanceof RegExp) {
         return locator.value.test(label)
       }
       return label === locator.value
+    }
+
+    case 'role': {
+      const role = el.role || ''
+      if (locator.value instanceof RegExp) {
+        return locator.value.test(role)
+      }
+      return role === locator.value
     }
 
     default:

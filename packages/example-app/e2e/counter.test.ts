@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 describe("Counter App", () => {
   it("shows the initial screen", async () => {
     await device.launch({ path: "/" });
-    await device.waitForAnimationToEnd();
 
     // Verify the counter screen is visible.
     await expect(element(by.id("counter"))).toBeVisible();
@@ -14,9 +13,6 @@ describe("Counter App", () => {
   });
 
   it("increments the counter on tap", async () => {
-    await device.launch({ path: "/" });
-    await device.waitForAnimationToEnd();
-
     await element(by.id("counter-scroll")).scrollTo(
       element(by.id("click-button")),
     );

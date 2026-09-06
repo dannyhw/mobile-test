@@ -30,11 +30,17 @@ export interface ElementHandle {
   value?: string
   title?: string
   frame: Record<string, number> // AXFrame: { X, Y, Width, Height }
+  /** Legacy XCUIElementType integer from the native driver. 0 when unknown. */
   elementType: number
+  /** Semantic role string (e.g. "button", "textfield") when the backend provides one. */
+  role?: string
   enabled: boolean
   placeholderValue?: string
   selected: boolean
   hasFocus: boolean
+  /** Backend-provided visibility hints; undefined when not reported. */
+  visibleToUser?: boolean
+  hittable?: boolean
   children?: ElementHandle[]
 }
 

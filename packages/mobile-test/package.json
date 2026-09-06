@@ -29,9 +29,11 @@
     "build:android-driver": "./android-driver/build.sh",
     "build:drivers": "./scripts/build-drivers.sh",
     "dev": "tsup --watch",
+    "check-device": "bun run scripts/check-device.ts",
     "test": "vitest run"
   },
   "dependencies": {
+    "agent-device": "0.20.10",
     "execa": "^9.5.2",
     "odiff-bin": "^3.1.1",
     "sharp": "^0.33.0"

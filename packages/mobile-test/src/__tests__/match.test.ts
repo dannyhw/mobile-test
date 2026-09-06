@@ -18,43 +18,43 @@ function makeElement(overrides: Partial<ElementHandle> = {}): ElementHandle {
 
 const tree: ElementHandle = makeElement({
   identifier: 'root',
-  elementType: 47, // group
+  role: 'group',
   children: [
     makeElement({
       identifier: 'header',
       label: 'Welcome',
-      elementType: 9, // staticText
+      role: 'statictext',
       children: [
-        makeElement({ identifier: 'title', label: 'My App', elementType: 9 }),
+        makeElement({ identifier: 'title', label: 'My App', role: 'statictext' }),
       ],
     }),
     makeElement({
       identifier: 'click-button',
       label: 'Click me',
-      elementType: 48, // button
+      role: 'button',
       frame: { X: 50, Y: 200, Width: 100, Height: 44 },
     }),
     makeElement({
       identifier: 'counter',
       value: '3',
       label: '',
-      elementType: 9, // staticText
+      role: 'statictext',
       frame: { X: 50, Y: 300, Width: 100, Height: 30 },
     }),
     makeElement({
       identifier: 'submit-button',
       label: 'Submit',
-      elementType: 48, // button
+      role: 'button',
       frame: { X: 50, Y: 400, Width: 100, Height: 44 },
     }),
     makeElement({
       identifier: 'nav-group',
-      elementType: 47,
+      role: 'group',
       children: [
         makeElement({
           identifier: 'nav-button',
           label: 'Go back',
-          elementType: 48,
+          role: 'button',
         }),
       ],
     }),
@@ -104,15 +104,20 @@ describe('findElement', () => {
   })
 })
 
-describe('by.type', () => {
-  it('finds element by elementType', () => {
-    const result = findElement(tree, by.type(48))
+describe('by.role', () => {
+  it('finds element by role', () => {
+    const result = findElement(tree, by.role('button'))
     expect(result).not.toBeNull()
     expect(result!.identifier).toBe('click-button')
   })
 
-  it('returns null for non-matching type', () => {
-    const result = findElement(tree, by.type(999))
+  it('supports a regex role', () => {
+    const result = findElement(tree, by.role(/^static/))
+    expect(result!.identifier).toBe('header')
+  })
+
+  it('returns null for non-matching role', () => {
+    const result = findElement(tree, by.role('slider'))
     expect(result).toBeNull()
   })
 })
@@ -133,12 +138,12 @@ describe('by.label', () => {
 
 describe('findAllElements', () => {
   it('finds all buttons', () => {
-    const results = findAllElements(tree, by.type(48))
+    const results = findAllElements(tree, by.role('button'))
     expect(results).toHaveLength(3) // click-button, submit-button, nav-button
   })
 
   it('finds all with limit', () => {
-    const results = findAllElements(tree, by.type(48), 2)
+    const results = findAllElements(tree, by.role('button'), 2)
     expect(results).toHaveLength(2)
     expect(results[0].identifier).toBe('click-button')
     expect(results[1].identifier).toBe('submit-button')
@@ -147,14 +152,14 @@ describe('findAllElements', () => {
 
 describe('withAncestor', () => {
   it('finds button inside nav-group', () => {
-    const locator = by.type(48).withAncestor(by.id('nav-group'))
+    const locator = by.role('button').withAncestor(by.id('nav-group'))
     const result = findElement(tree, locator)
     expect(result).not.toBeNull()
     expect(result!.identifier).toBe('nav-button')
   })
 
   it('finds only buttons under specific ancestor', () => {
-    const locator = by.type(48).withAncestor(by.id('nav-group'))
+    const locator = by.role('button').withAncestor(by.id('nav-group'))
     const results = findAllElements(tree, locator)
     expect(results).toHaveLength(1)
     expect(results[0].identifier).toBe('nav-button')
