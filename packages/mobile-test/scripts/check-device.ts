@@ -24,11 +24,11 @@ const { values } = parseArgs({
 })
 
 const platform = values.platform === 'android' ? 'android' : 'ios'
-const appId = values.app
-if (!appId) {
+if (!values.app) {
   console.error('Usage: bun run check-device -- --platform ios|android --app <bundle id or package> [--device <name or id>]')
   process.exit(2)
 }
+const appId: string = values.app
 if (values.debug) setLogLevel('debug')
 
 async function step<T>(name: string, fn: () => Promise<T>): Promise<T> {
