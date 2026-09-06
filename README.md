@@ -76,10 +76,6 @@ workflow, and delegates every native interaction to
 - locator matching, auto-waiting, screenshot comparison and Vitest wiring stay
   in TypeScript
 
-An earlier iteration shipped its own Swift and Kotlin drivers over HTTP/JSON.
-They were replaced once agent-device covered the same ground; the comparison
-is in [`plan/poc-agent-device-backend.md`](./plan/poc-agent-device-backend.md).
-
 ## Try It
 
 The package README has the setup, config and API reference:
@@ -90,6 +86,8 @@ bun install
 cd packages/mobile-test && bun run build
 cd ../example-app
 ```
+
+Note that you don't need a custom build of your app for testing, what ever build you already have will work. However if you are building for the first time just run your app in either release or debug mode and start the tests.
 
 Two ways to put the example app on a device. Either works with every test;
 only one can be installed at a time because they share a bundle id.
@@ -118,8 +116,7 @@ channel server, and without Metro the test starts that server itself
 (`createChannelServer` from `@storybook/react-native/node`) or falls back to
 deep links.
 
-The first run on a fresh simulator builds agent-device's iOS runner with Xcode
-and takes a few minutes; later runs reuse it.
+The first run on a fresh simulator builds agent-device's iOS runner with Xcode, later runs reuse it.
 
 ## Current Status
 
