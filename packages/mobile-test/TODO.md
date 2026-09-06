@@ -44,3 +44,14 @@ Findings and timings live in `../../research/agent-device-programmatic-api.md`.
 - [x] Removed `build:drivers` scripts. `execa` stays for `simctl status_bar` and adb key events.
 - [x] Update `ROADMAP.md`, package `CLAUDE.md`/`AGENTS.md`, README.
 - [ ] Move this file to `completed-steps/poc-agent-device/`.
+
+## M6 — Ready to try
+
+- [x] iOS pixel density detected once per run from a `simctl io screenshot` (override: `screenshots.pixelDensity`).
+- [x] `RUNNER_BUSY` and `retriable` agent-device errors retried 3x before failing.
+- [x] Stale `mobile-test:*` sessions closed at startup; SIGINT/SIGTERM close the session.
+- [x] `by.type(number)` removed; `by.role(string)` is the replacement.
+- [x] e2e coverage for `openUrl` on a running app, `hideKeyboard`, `pressHome` + relaunch, `setLocation`, element-level screenshots and masks (`e2e/device.test.ts`, `e2e/screenshots.test.ts`): 12/12 on iOS, 11/12 on Android (hint gap).
+- [x] `packages/mobile-test/README.md` quick start + API reference; root README "Try it".
+- [ ] Storybook test (needs the Storybook dev build).
+- [ ] Android hint-as-value gap (upstream; issue draft in the research doc).

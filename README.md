@@ -80,6 +80,26 @@ An earlier iteration shipped its own Swift and Kotlin drivers over HTTP/JSON.
 They were replaced once agent-device covered the same ground; the comparison
 is in [`plan/poc-agent-device-backend.md`](./plan/poc-agent-device-backend.md).
 
+## Try It
+
+The package README has the setup, config and API reference:
+[`packages/mobile-test/README.md`](./packages/mobile-test/README.md).
+
+To run the example app suite from this repo:
+
+```bash
+bun install
+cd packages/mobile-test && bun run build
+cd ../example-app
+bun expo run:ios --configuration Release --device "iPhone 17"   # installs a Release build on the simulator
+bun run test:e2e                                                 # iOS simulator
+bun run test:e2e:android                                         # booted Android emulator
+```
+
+Release builds embed the JS bundle, so Metro does not need to be running.
+The first run on a fresh simulator builds agent-device's iOS runner with Xcode
+and takes a few minutes; later runs reuse it.
+
 ## Current Status
 
 This repo is still in progress.

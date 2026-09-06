@@ -1,6 +1,12 @@
 import type { TestProject } from 'vitest/node'
 import { normalizeStatusBar, resetStatusBar } from '../screenshot/normalize.js'
-import { AgentDeviceBackend, listAgentDevices, type AgentDeviceListedDevice } from '../backend/agent-device.js'
+import {
+  AgentDeviceBackend,
+  closeAgentSession,
+  listAgentDevices,
+  listAgentSessions,
+  type AgentDeviceListedDevice,
+} from '../backend/agent-device.js'
 import { resolveProjectTarget, type MobileTestRuntimeContext } from './context.js'
 
 /**
@@ -19,14 +25,35 @@ export async function setup(project: TestProject) {
   const platform = selectedProject?.platform ?? 'ios'
 
   const device = await pickDevice(platform, selectedProject?.device)
-  const session = `mobile-test:${project.name || 'default'}:${process.pid}`
+  const session = `${SESSION_PREFIX}${project.name || 'default'}:${process.pid}`
   console.log(`[mobile-test] Using ${device.kind}: ${device.name} (${device.id}) via agent-device session "${session}"`)
+
+  // A previous run that crashed (or was killed) may still hold a session that
+  // claims the device. Sessions we created are recognisable by their prefix.
+  await closeStaleSessions()
 
   const backend = new AgentDeviceBackend({
     session,
     platform,
     device: { name: device.name, id: device.id, platform },
+    iosPixelDensity: providedConfig.screenshotPixelDensity,
   })
+
+  let closed = false
+  const close = async () => {
+    if (closed) return
+    closed = true
+    console.log('[mobile-test] Closing agent-device session...')
+    await backend.close()
+    if (platform === 'ios') {
+      await resetStatusBar(device.id)
+    }
+  }
+  const onSignal = () => {
+    close().finally(() => process.exit(130))
+  }
+  process.once('SIGINT', onSignal)
+  process.once('SIGTERM', onSignal)
 
   if (platform === 'ios') {
     await normalizeStatusBar(device.id)
@@ -39,34 +66,52 @@ export async function setup(project: TestProject) {
     await backend.launchApp(appId, { relaunch: true })
   }
 
+  // Detect the simulator scale once here rather than in every worker.
+  if (platform === 'ios' && backend.pixelDensity === undefined) {
+    await backend.screenshot()
+  }
+
   const runtime: MobileTestRuntimeContext = {
     session,
     deviceName: device.name,
     deviceUdid: device.id,
     platform,
+    iosPixelDensity: backend.pixelDensity,
   }
   project.provide('__mobileTestRuntime', runtime)
 
   return async () => {
-    console.log('[mobile-test] Closing agent-device session...')
-    await backend.close()
-    if (platform === 'ios') {
-      await resetStatusBar(device.id)
+    process.off('SIGINT', onSignal)
+    process.off('SIGTERM', onSignal)
+    await close()
+  }
+}
+
+const SESSION_PREFIX = 'mobile-test:'
+
+async function closeStaleSessions(): Promise<void> {
+  try {
+    const stale = (await listAgentSessions()).filter(name => name.startsWith(SESSION_PREFIX))
+    for (const name of stale) {
+      console.log(`[mobile-test] Closing stale agent-device session "${name}" left by a previous run`)
+      await closeAgentSession(name)
     }
+  } catch (err) {
+    console.log(`[mobile-test] Could not check for stale sessions: ${(err as Error).message}`)
   }
 }
 
 async function pickDevice(platform: 'ios' | 'android', requested?: string): Promise<AgentDeviceListedDevice> {
   const devices = await listAgentDevices(platform)
-  const candidates = devices.filter(d => d.kind !== 'device')
   const label = platform === 'ios' ? 'simulator' : 'emulator'
 
   if (requested) {
-    const match = candidates.find(d => d.name === requested || d.id === requested)
+    // A physical device can be selected explicitly by name or id.
+    const match = devices.find(d => d.name === requested || d.id === requested)
     if (!match) {
       throw new Error(
-        `mobile-test: No ${label} named "${requested}" found.\n` +
-        `Available: ${candidates.map(d => `${d.name} (${d.id})${d.booted ? ' [booted]' : ''}`).join(', ') || 'none'}`
+        `mobile-test: No ${label} or device named "${requested}" found.\n` +
+        `Available: ${devices.map(d => `${d.name} (${d.id})${d.booted ? ' [booted]' : ''}`).join(', ') || 'none'}`
       )
     }
     if (!match.booted) {
@@ -77,6 +122,7 @@ async function pickDevice(platform: 'ios' | 'android', requested?: string): Prom
     return match
   }
 
+  const candidates = devices.filter(d => d.kind !== 'device')
   const booted = candidates.filter(d => d.booted)
   if (booted.length === 0) {
     throw new Error(

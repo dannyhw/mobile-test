@@ -4,6 +4,7 @@ export interface MobileTestProvidedConfig {
   actionTimeout: number
   logLevel: 'silent' | 'info' | 'debug'
   screenshotsDir: string
+  screenshotPixelDensity?: number
   iosBundleId?: string
   iosScheme?: string
   androidAppId?: string
@@ -15,6 +16,8 @@ export interface MobileTestProvidedConfig {
 export interface MobileTestRuntimeContext {
   /** agent-device session name shared by globalSetup and the workers. */
   session: string
+  /** iOS simulator scale, configured or detected in globalSetup. */
+  iosPixelDensity?: number
   deviceName: string
   deviceUdid: string
   platform: 'ios' | 'android'
@@ -28,6 +31,7 @@ export function createProvidedConfig(
     actionTimeout: config.actionTimeout,
     logLevel: config.logLevel,
     screenshotsDir: config.screenshots.dir,
+    screenshotPixelDensity: config.screenshots.pixelDensity,
     iosBundleId: config.app.ios?.bundleId,
     iosScheme: config.app.ios?.scheme,
     androidAppId: config.app.android?.appId,

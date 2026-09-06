@@ -1,11 +1,11 @@
-export type LocatorType = 'id' | 'text' | 'type' | 'label' | 'role'
+export type LocatorType = 'id' | 'text' | 'label' | 'role'
 
 export class Locator {
   public ancestorLocator?: Locator
 
   constructor(
     public readonly type: LocatorType,
-    public readonly value: string | RegExp | number,
+    public readonly value: string | RegExp,
   ) {}
 
   withAncestor(ancestor: Locator): Locator {
@@ -30,10 +30,6 @@ export const by = {
 
   text(text: string | RegExp): Locator {
     return new Locator('text', text)
-  },
-
-  type(elementType: number): Locator {
-    return new Locator('type', elementType)
   },
 
   label(label: string | RegExp): Locator {

@@ -28,6 +28,8 @@ const LONG_PRESS_THRESHOLD_MS = 500
 const DEFAULT_IOS_PIXEL_DENSITY = 3
 const DEFAULT_SWIPE_DURATION_MS = 300
 const ADB_KEYEVENT_BATCH = 24
+const RETRY_ATTEMPTS = 3
+const RETRY_DELAY_MS = 750
 
 export interface AgentDeviceBackendOptions {
   /** agent-device session name. All clients sharing it act on the same device claim. */
@@ -72,6 +74,20 @@ export async function listAgentDevices(platform: Platform): Promise<AgentDeviceL
     }))
 }
 
+/** Names of the agent-device sessions currently open on this host. */
+export async function listAgentSessions(): Promise<string[]> {
+  const client = createAgentDeviceClient()
+  const sessions = await client.sessions.list()
+  return sessions
+    .map(s => (typeof s === 'string' ? s : (s as any)?.session ?? (s as any)?.name))
+    .filter((name): name is string => typeof name === 'string')
+}
+
+export async function closeAgentSession(session: string): Promise<void> {
+  const client = createAgentDeviceClient({ session })
+  await client.sessions.close({ session })
+}
+
 /**
  * Backend that drives devices through agent-device's Node client.
  */
@@ -80,7 +96,7 @@ export class AgentDeviceBackend implements Backend {
   readonly device: BackendDeviceInfo
   private readonly client: Client
   private readonly session: string
-  private readonly iosPixelDensity: number | undefined
+  private iosPixelDensity: number | undefined
   private readonly normalizeStatusBar: boolean
   private readonly rectDivisor: number | undefined
   private viewportCache: Frame | undefined
@@ -91,15 +107,20 @@ export class AgentDeviceBackend implements Backend {
     this.platform = options.platform
     this.device = options.device
     this.session = options.session
-    // iOS simulator screenshots default to 1x; existing baselines are native
-    // pixels. 3x is right for every current iPhone; iPad/SE users can override.
-    this.iosPixelDensity = options.iosPixelDensity ?? DEFAULT_IOS_PIXEL_DENSITY
+    // iOS simulator screenshots default to 1x; baselines are native pixels.
+    // When not configured, the density is detected once per session.
+    this.iosPixelDensity = options.iosPixelDensity
     // Off by default: globalSetup applies our own `simctl status_bar` override
     // (time 9:41, 4 cellular bars) so baselines from the native driver still
     // match. agent-device's normalization shows no cellular bars.
     this.normalizeStatusBar = options.normalizeStatusBar ?? false
     this.rectDivisor = options.rectDivisor
     this.client = options.client ?? createAgentDeviceClient({ session: options.session })
+  }
+
+  /** iOS pixels per point, once configured or detected (undefined before the first screenshot). */
+  get pixelDensity(): number | undefined {
+    return this.iosPixelDensity
   }
 
   /** Selection options attached to every request. */
@@ -122,12 +143,13 @@ export class AgentDeviceBackend implements Backend {
 
   async screenshot(options?: ScreenshotOptions): Promise<ScreenshotCapture> {
     return log.time('backend.screenshot', async () => {
+      const pixelDensity = this.platform === 'ios' ? await this.resolveIosPixelDensity() : undefined
       const path = join(this.ensureTmpDir(), `shot-${Date.now()}-${Math.random().toString(36).slice(2)}.png`)
       const result = await this.call('screenshot', () =>
         this.client.capture.screenshot({
           ...this.sel,
           path,
-          ...(this.platform === 'ios' && this.iosPixelDensity ? { pixelDensity: this.iosPixelDensity } : {}),
+          ...(pixelDensity ? { pixelDensity } : {}),
           ...(this.platform === 'ios' ? { normalizeStatusBar: this.normalizeStatusBar } : {}),
           // Android capture waits for demo-mode status bar + a settle delay
           // (~1.2s). Motion-diff loops only need consecutive frames.
@@ -159,6 +181,37 @@ export class AgentDeviceBackend implements Backend {
     if (this.viewportCache) return this.viewportCache
     await this.screenshot()
     return this.viewportCache!
+  }
+
+  /**
+   * agent-device does not report the simulator's scale factor and captures
+   * at 1x by default. Compare a 1x capture's logical width with the width of
+   * a native `simctl io screenshot` once, then cache the ratio.
+   */
+  private async resolveIosPixelDensity(): Promise<number> {
+    if (this.iosPixelDensity) return this.iosPixelDensity
+    if (this.device.id.length === 0) return DEFAULT_IOS_PIXEL_DENSITY
+
+    try {
+      const dir = this.ensureTmpDir()
+      const probePath = join(dir, 'density-probe-1x.png')
+      const probe = await this.client.capture.screenshot({ ...this.sel, path: probePath })
+      const logicalWidth = probe.logicalWidth ?? readPngSize(readFileSync(probe.path ?? probePath)).width
+      rmSync(probe.path ?? probePath, { force: true })
+
+      const nativePath = join(dir, 'density-probe-native.png')
+      await execa('xcrun', ['simctl', 'io', this.device.id, 'screenshot', nativePath])
+      const nativeWidth = readPngSize(readFileSync(nativePath)).width
+      rmSync(nativePath, { force: true })
+
+      const density = Math.max(1, Math.round(nativeWidth / logicalWidth))
+      log.debug(`detected iOS pixel density ${density} (${nativeWidth}px / ${logicalWidth}pt)`)
+      this.iosPixelDensity = density
+    } catch (err) {
+      log.debug(`iOS pixel density detection failed, using ${DEFAULT_IOS_PIXEL_DENSITY}x: ${errorMessage(err)}`)
+      this.iosPixelDensity = DEFAULT_IOS_PIXEL_DENSITY
+    }
+    return this.iosPixelDensity
   }
 
   async keyboardVisible(): Promise<boolean> {
@@ -391,11 +444,25 @@ export class AgentDeviceBackend implements Backend {
     return this.tmpDir
   }
 
+  /**
+   * Run one agent-device call, retrying the transient "runner busy" state
+   * (the iOS runner is still finishing a watchdog-exceeded capture) a few
+   * times before surfacing the error.
+   */
   private async call<T>(operation: string, fn: () => Promise<T>): Promise<T> {
-    try {
-      return await fn()
-    } catch (err) {
-      throw wrap(operation, err)
+    let attempt = 0
+    while (true) {
+      try {
+        return await fn()
+      } catch (err) {
+        if (isRetriable(err) && attempt < RETRY_ATTEMPTS) {
+          attempt++
+          log.debug(`${operation}: ${errorCode(err)}, retrying (${attempt}/${RETRY_ATTEMPTS}) in ${RETRY_DELAY_MS}ms`)
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS))
+          continue
+        }
+        throw wrap(operation, err)
+      }
     }
   }
 }
@@ -417,6 +484,11 @@ function errorReason(err: unknown): string | undefined {
 
 function isUnsupported(err: unknown): boolean {
   return errorCode(err) === 'UNSUPPORTED_OPERATION'
+}
+
+function isRetriable(err: unknown): boolean {
+  if (errorCode(err) === 'RUNNER_BUSY') return true
+  return (err as any)?.details?.retriable === true || (err as any)?.retriable === true
 }
 
 function wrap(operation: string, err: unknown): Error {

@@ -13,6 +13,8 @@ export type {
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
+  ResolvedScreenshotConfig,
+  ScreenshotConfig,
 } from './config.js'
 export type { Locator } from './element/by.js'
 export type { Element } from './element/element.js'

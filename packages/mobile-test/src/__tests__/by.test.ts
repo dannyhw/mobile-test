@@ -26,12 +26,12 @@ describe('by', () => {
     expect((locator.value as RegExp).test('Welcome back')).toBe(true)
   })
 
-  it('creates a type locator', () => {
-    const locator = by.type(48)
+  it('creates a role locator', () => {
+    const locator = by.role('button')
 
     expect(locator).toBeInstanceOf(Locator)
-    expect(locator.type).toBe('type')
-    expect(locator.value).toBe(48)
+    expect(locator.type).toBe('role')
+    expect(locator.value).toBe('button')
   })
 
   it('creates a label locator with string', () => {
@@ -51,15 +51,15 @@ describe('by', () => {
 
   it('withAncestor creates a new locator with ancestor', () => {
     const ancestor = by.id('container')
-    const locator = by.type(48).withAncestor(ancestor)
+    const locator = by.role('button').withAncestor(ancestor)
 
     expect(locator).toBeInstanceOf(Locator)
-    expect(locator.type).toBe('type')
+    expect(locator.type).toBe('role')
     expect(locator.ancestorLocator).toBe(ancestor)
   })
 
   it('withAncestor does not mutate original locator', () => {
-    const original = by.type(48)
+    const original = by.role('button')
     const withAnc = original.withAncestor(by.id('foo'))
 
     expect(original.ancestorLocator).toBeUndefined()
@@ -69,12 +69,12 @@ describe('by', () => {
   it('has a readable toString', () => {
     expect(by.id('foo').toString()).toBe('by.id(foo)')
     expect(by.text('bar').toString()).toBe('by.text(bar)')
-    expect(by.type(48).toString()).toBe('by.type(48)')
+    expect(by.role('button').toString()).toBe('by.role(button)')
     expect(by.label('Submit').toString()).toBe('by.label(Submit)')
   })
 
   it('toString includes ancestor', () => {
-    const locator = by.type(48).withAncestor(by.id('container'))
-    expect(locator.toString()).toBe('by.type(48).withAncestor(by.id(container))')
+    const locator = by.role('button').withAncestor(by.id('container'))
+    expect(locator.toString()).toBe('by.role(button).withAncestor(by.id(container))')
   })
 })

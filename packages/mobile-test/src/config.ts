@@ -36,6 +36,15 @@ export interface ScreenshotConfig {
   maxDiffPercentage?: number
   antialiasing?: boolean
   updateBaselines?: boolean
+  /**
+   * Pixels per point for iOS simulator screenshots (2 for iPad/SE, 3 for
+   * iPhone). Detected automatically when omitted. Ignored on Android.
+   */
+  pixelDensity?: number
+}
+
+export type ResolvedScreenshotConfig = Required<Omit<ScreenshotConfig, 'pixelDensity'>> & {
+  pixelDensity?: number
 }
 
 export interface MobileTestConfig {
@@ -50,7 +59,7 @@ export interface MobileTestConfig {
 export interface ResolvedConfig extends Required<Omit<MobileTestConfig, 'app' | 'projects' | 'screenshots' | 'logLevel'>> {
   app: ResolvedAppConfig
   projects?: ResolvedProjectConfig[]
-  screenshots: Required<ScreenshotConfig>
+  screenshots: ResolvedScreenshotConfig
   logLevel: 'silent' | 'info' | 'debug'
 }
 

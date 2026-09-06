@@ -69,9 +69,6 @@ function matches(el: ElementHandle, locator: Locator): boolean {
       return text === locator.value
     }
 
-    case 'type':
-      return el.elementType === locator.value
-
     case 'label': {
       const label = el.label || ''
       if (locator.value instanceof RegExp) {

@@ -6,6 +6,17 @@ import { BackendUnsupportedError } from '../backend/types.js'
 const { mockExeca } = vi.hoisted(() => ({ mockExeca: vi.fn().mockResolvedValue({ stdout: '' }) }))
 vi.mock('execa', () => ({ execa: mockExeca }))
 
+/** Make the fake `xcrun simctl io screenshot` write a PNG of the given width. */
+function simctlWritesNativePng(width: number) {
+  mockExeca.mockImplementation(async (cmd: string, args: string[]) => {
+    if (cmd === 'xcrun' && args.includes('screenshot')) {
+      const out = args[args.length - 1]
+      await sharp({ create: { width, height: width * 2, channels: 3, background: '#000' } }).png().toFile(out)
+    }
+    return { stdout: '' }
+  })
+}
+
 vi.mock('../logger.js', () => ({
   log: {
     time: vi.fn(async (_label: string, fn: () => unknown) => await fn()),
@@ -97,11 +108,45 @@ describe('AgentDeviceBackend', () => {
     expect(root.children![0]).toMatchObject({ identifier: 'go', label: 'Go', role: 'button', frame: { X: 1, Y: 2, Width: 3, Height: 4 } })
   })
 
-  it('captures screenshots at 3x on iOS and derives points and scale', async () => {
+  it('detects the iOS pixel density once from a native simctl capture, then captures at that density', async () => {
+    simctlWritesNativePng(8) // 8px native for a 4pt logical width → 2x
     const backend = backendWith(client)
     const shot = await backend.screenshot()
 
-    expect(client.capture.screenshot).toHaveBeenCalledWith(
+    // 1st call: 1x probe; 2nd call: the real capture at the detected density.
+    expect(client.capture.screenshot).toHaveBeenCalledTimes(2)
+    expect(client.capture.screenshot.mock.calls[0][0].pixelDensity).toBeUndefined()
+    expect(client.capture.screenshot.mock.calls[1][0]).toMatchObject({ platform: 'ios', udid: 'UDID-1', pixelDensity: 2, normalizeStatusBar: false })
+    expect(mockExeca).toHaveBeenCalledWith('xcrun', ['simctl', 'io', 'UDID-1', 'screenshot', expect.stringContaining('density-probe-native.png')])
+    expect(shot.scale).toBe(2)
+
+    await backend.screenshot()
+    expect(client.capture.screenshot).toHaveBeenCalledTimes(3) // no second probe
+    mockExeca.mockReset().mockResolvedValue({ stdout: '' })
+  })
+
+  it('falls back to 3x when density detection fails, and honours a configured density', async () => {
+    mockExeca.mockRejectedValueOnce(new Error('xcrun missing'))
+    await backendWith(client).screenshot()
+    expect(client.capture.screenshot.mock.calls[1][0].pixelDensity).toBe(3)
+    mockExeca.mockReset().mockResolvedValue({ stdout: '' })
+
+    client = fakeClient()
+    const configured = new AgentDeviceBackend({
+      session: 's', platform: 'ios', device: { name: 'iPad', id: 'UDID-2', platform: 'ios' }, iosPixelDensity: 2, client: client as any,
+    })
+    await configured.screenshot()
+    expect(client.capture.screenshot).toHaveBeenCalledTimes(1)
+    expect(client.capture.screenshot.mock.calls[0][0].pixelDensity).toBe(2)
+    expect(mockExeca).not.toHaveBeenCalled()
+  })
+
+  it('captures screenshots at the detected scale and derives points', async () => {
+    simctlWritesNativePng(12)
+    const backend = backendWith(client)
+    const shot = await backend.screenshot()
+
+    expect(client.capture.screenshot).toHaveBeenLastCalledWith(
       expect.objectContaining({ platform: 'ios', udid: 'UDID-1', pixelDensity: 3, normalizeStatusBar: false }),
     )
     expect(shot.scale).toBe(3)
@@ -113,7 +158,8 @@ describe('AgentDeviceBackend', () => {
 
     // Viewport is cached from the screenshot's logical size.
     expect(await backend.viewport()).toEqual({ x: 0, y: 0, width: 4, height: 8 })
-    expect(client.capture.screenshot).toHaveBeenCalledTimes(1)
+    expect(client.capture.screenshot).toHaveBeenCalledTimes(2) // probe + capture, no extra call for viewport
+    mockExeca.mockReset().mockResolvedValue({ stdout: '' })
   })
 
   it('does not request a pixel density on Android', async () => {
@@ -238,6 +284,18 @@ describe('AgentDeviceBackend', () => {
     client.command.wait.mockRejectedValueOnce(agentError('UNSUPPORTED_OPERATION'))
     await expect(backend.waitStable()).rejects.toBeInstanceOf(BackendUnsupportedError)
   })
+
+  it('retries transient RUNNER_BUSY errors before giving up', async () => {
+    client.interactions.press
+      .mockRejectedValueOnce(agentError('RUNNER_BUSY', 'runner still busy'))
+      .mockRejectedValueOnce(agentError('RUNNER_BUSY', 'runner still busy'))
+      .mockResolvedValueOnce({})
+    await backendWith(client).tap(1, 1)
+    expect(client.interactions.press).toHaveBeenCalledTimes(3)
+
+    client.interactions.press.mockRejectedValue(agentError('RUNNER_BUSY', 'runner still busy'))
+    await expect(backendWith(client).tap(1, 1)).rejects.toThrow(/press failed \(RUNNER_BUSY\)/)
+  }, 15_000)
 
   it('wraps agent-device errors with the operation, code and hint', async () => {
     client.interactions.press.mockRejectedValue(agentError('AMBIGUOUS_MATCH', 'two matches', { hint: 'narrow it' }))

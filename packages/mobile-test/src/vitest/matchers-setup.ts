@@ -24,7 +24,7 @@ if (!config) {
   )
 }
 
-const { actionTimeout, logLevel, screenshotsDir, iosBundleId, iosScheme, androidAppId, androidScheme } = config
+const { actionTimeout, logLevel, screenshotsDir, screenshotPixelDensity, iosBundleId, iosScheme, androidAppId, androidScheme } = config
 
 if (actionTimeout || logLevel || screenshotsDir || iosBundleId || iosScheme || androidAppId || androidScheme) {
   setTestConfig({
@@ -45,12 +45,13 @@ afterAll(() => {
   log.printTimingSummary()
 })
 
-const { session, deviceName, deviceUdid, platform } = runtime
+const { session, deviceName, deviceUdid, platform, iosPixelDensity } = runtime
 
 const backend = new AgentDeviceBackend({
   session,
   platform,
   device: { name: deviceName, id: deviceUdid, platform },
+  iosPixelDensity: screenshotPixelDensity ?? iosPixelDensity,
 })
 
 setBackend(backend)

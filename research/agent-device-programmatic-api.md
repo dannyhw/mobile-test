@@ -327,3 +327,36 @@ Per-call observation is 2-3x slower through the daemon, but launches, typing
 and clearing are 3-4x faster, and the suite is ~25% faster overall. The
 timings above for agent-device were taken before `waitForAnimationToEnd`
 switched back to screenshot diffing, which removes a further ~1.5s per call.
+
+## Hardening added after the POC
+
+- **iOS scale detection.** agent-device does not report the simulator scale, so
+  globalSetup takes one 1x capture for the logical width and one
+  `xcrun simctl io screenshot` for the native width and caches the ratio
+  (`screenshots.pixelDensity` overrides it).
+- **Retries.** `RUNNER_BUSY` (and any error flagged `retriable`) is retried
+  three times with a 750ms pause inside the backend.
+- **Session hygiene.** globalSetup closes any `mobile-test:*` session left by
+  a crashed run, and SIGINT/SIGTERM close the current one.
+
+## Upstream issue draft: Android hint text reported as value
+
+To file against callstack/agent-device once confirmed on the latest version.
+
+> **Android snapshot reports an EditText's hint as its `value`**
+>
+> On an Android emulator (Pixel 9, API 35, agent-device 0.20.10), `snapshot --raw --json`
+> returns `"value": "Name", "label": "Name"` for an empty React Native
+> `TextInput` whose `placeholder` is "Name". After `fill 'id="form-name"' Bob`
+> the node reports `"value": "Bob"`; after deleting the text it reports
+> `"value": "Name"` again. There is no field that distinguishes the two
+> states, so a test cannot assert that a field is empty.
+>
+> `AccessibilityNodeInfo` exposes `isShowingHintText()` and `getHintText()`
+> (API 26+). Exposing either (for example `hint: "Name"` plus
+> `showingHint: true`, or omitting `value` while the hint is showing, which is
+> what the iOS snapshot already does) would resolve this.
+>
+> Repro: open any app with an empty `TextInput` that has a placeholder, run
+> `agent-device snapshot --raw --json --platform android`, compare the node
+> before and after `fill`.
