@@ -75,7 +75,18 @@ export async function compareScreenshots(
  * Writes to temp files, runs odiff, cleans up.
  * Returns the diff percentage (0 = identical).
  */
-export async function compareBuffers(a: Buffer, b: Buffer, threshold = 0.1): Promise<number> {
+export interface CompareBuffersOptions {
+  threshold?: number
+  /** Pixel regions to ignore, e.g. system chrome that animates on its own. */
+  ignoreRegions?: Array<{ x1: number; y1: number; x2: number; y2: number }>
+}
+
+export async function compareBuffers(
+  a: Buffer,
+  b: Buffer,
+  thresholdOrOptions: number | CompareBuffersOptions = 0.1,
+): Promise<number> {
+  const options = typeof thresholdOrOptions === 'number' ? { threshold: thresholdOrOptions } : thresholdOrOptions
   const dir = mkdtempSync(join(tmpdir(), 'mobile-test-'))
   const fileA = join(dir, 'a.png')
   const fileB = join(dir, 'b.png')
@@ -86,8 +97,9 @@ export async function compareBuffers(a: Buffer, b: Buffer, threshold = 0.1): Pro
     writeFileSync(fileB, b)
 
     const result = await compare(fileA, fileB, fileDiff, {
-      threshold,
+      threshold: options.threshold ?? 0.1,
       noFailOnFsErrors: true,
+      ...(options.ignoreRegions?.length ? { ignoreRegions: options.ignoreRegions } : {}),
     })
 
     if (result.match) return 0

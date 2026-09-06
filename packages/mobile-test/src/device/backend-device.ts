@@ -1,5 +1,6 @@
 import type { Device, LaunchOptions, OpenUrlOptions, WaitForAnimationOptions } from './types.js'
-import type { Backend } from '../backend/types.js'
+import type { Backend, ScreenshotCapture } from '../backend/types.js'
+import type { ElementHandle } from '../element/types.js'
 import { getActiveBundleId, setActiveBundleId } from '../backend/context.js'
 import { getAndroidAppConfig, getIOSAppConfig } from '../config-context.js'
 import { compareBuffers } from '../screenshot/compare.js'
@@ -14,6 +15,21 @@ import {
 const KEYBOARD_POLL_INTERVAL = 100
 const KEYBOARD_HIDE_TIMEOUT = 2_000
 const STABLE_FRAMES_REQUIRED = 2
+const LAUNCH_CONTENT_TIMEOUT_MS = 5_000
+const LAUNCH_CONTENT_POLL_MS = 50
+/** Bottom strip holding the iOS home indicator, which fades by itself after launch. */
+const IOS_HOME_INDICATOR_BAND_POINTS = 20
+
+/** Cheap fingerprint of an accessibility tree: node count plus identifiers/labels in order. */
+function treeSignature(root: ElementHandle): string {
+  const parts: string[] = []
+  const walk = (n: ElementHandle) => {
+    parts.push(`${n.role ?? ''}|${n.identifier}|${n.label}|${n.value ?? ''}`)
+    n.children?.forEach(walk)
+  }
+  walk(root)
+  return `${parts.length}:${parts.join('\n')}`
+}
 
 /**
  * The single `Device` implementation. Platform differences live in the
@@ -39,7 +55,28 @@ export class BackendDevice implements Device {
       const relaunch = typeof bundleIdOrOptions === 'object' ? bundleIdOrOptions.relaunch ?? true : true
       setActiveBundleId(bundleId)
       await this.backend.launchApp(bundleId, { url, relaunch })
+      await this.waitForFirstContent()
     })
+  }
+
+  /**
+   * After a launch the app shows its splash while the bundle loads; pixels
+   * cannot tell a static splash from settled content, but the accessibility
+   * tree can: it grows when the first screen renders and then stops changing.
+   * Wait for two consecutive identical tree signatures.
+   */
+  private async waitForFirstContent(timeout = LAUNCH_CONTENT_TIMEOUT_MS): Promise<void> {
+    const start = Date.now()
+    let previous = ''
+    let stable = 0
+    while (Date.now() - start < timeout) {
+      const signature = await this.backend.snapshot().then(treeSignature).catch(() => '')
+      stable = signature !== '' && signature === previous ? stable + 1 : 0
+      if (stable >= 1) return
+      previous = signature
+      await new Promise(r => setTimeout(r, LAUNCH_CONTENT_POLL_MS))
+    }
+    log.debug('launch: accessibility tree kept changing; continuing anyway')
   }
 
   async terminate(bundleId: string): Promise<void> {
@@ -70,27 +107,30 @@ export class BackendDevice implements Device {
     return log.time('device.waitForAnimationToEnd', async () => {
       const timeout = options?.timeout ?? 2_000
       const threshold = options?.threshold ?? 0.01
-      const interval = options?.interval ?? 100
+      // Captures already take ~150ms each; no extra pause between them by default.
+      const interval = options?.interval ?? 0
 
       // Screenshot diffing, not the backend's `waitStable`: agent-device's
       // accessibility-based "stable" rarely settles on React Native screens
       // (it timed out on 6 of 8 calls in the example suite), while a few
       // identical screenshots take well under a second.
       //
-      // Two consecutive unchanged frames are required: a launch splash sits
-      // still for a moment before the content appears, and a single
-      // unchanged pair would call that "settled".
+      // Two consecutive unchanged frames are required so a brief pause in an
+      // animation is not mistaken for its end. The iOS home indicator fades
+      // on its own after launch and is excluded from the comparison.
       const start = Date.now()
-      let previous = (await this.backend.screenshot({ fast: true })).png
+      let shot = await this.backend.screenshot({ fast: true })
+      const ignoreRegions = this.motionIgnoreRegions(shot)
+      let previous = shot.png
       let stableFrames = 0
 
       while (Date.now() - start < timeout) {
-        await new Promise(r => setTimeout(r, interval))
-        const current = (await this.backend.screenshot({ fast: true })).png
-        const diff = await compareBuffers(previous, current)
+        if (interval > 0) await new Promise(r => setTimeout(r, interval))
+        shot = await this.backend.screenshot({ fast: true })
+        const diff = await compareBuffers(previous, shot.png, { ignoreRegions })
         stableFrames = diff <= threshold ? stableFrames + 1 : 0
         if (stableFrames >= STABLE_FRAMES_REQUIRED) return
-        previous = current
+        previous = shot.png
       }
       // Timeout silently returns (matches Maestro behavior)
     })
@@ -150,6 +190,13 @@ export class BackendDevice implements Device {
 
   async setLocation(latitude: number, longitude: number): Promise<void> {
     await this.backend.setLocation(latitude, longitude)
+  }
+
+  /** System chrome that animates independently of the app. */
+  private motionIgnoreRegions(shot: ScreenshotCapture): Array<{ x1: number; y1: number; x2: number; y2: number }> {
+    if (this.platform !== 'ios') return []
+    const bandPx = Math.round(IOS_HOME_INDICATOR_BAND_POINTS * shot.scale)
+    return [{ x1: 0, y1: Math.max(0, shot.heightPixels - bandPx), x2: shot.widthPixels, y2: shot.heightPixels }]
   }
 
   private defaultBundleId(): string | null {

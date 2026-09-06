@@ -410,3 +410,31 @@ snapshotting during the route transition tripped the runner watchdog
 (`RUNNER_BUSY`) six times in one run. Net: no faster and less stable on iOS,
 so the example tests keep the default. On Android there is no alert and
 `open` with a URL is ~150ms, so it is a real saving there.
+
+## Anatomy of a launch (iPhone 17, Release build)
+
+Measured with simctl screenshots and accessibility snapshots after
+`apps.open({ relaunch: true, url })`:
+
+| From launch start | What happens |
+|---|---|
+| 0.0-0.8s | agent-device `open`: terminate, launch, open URL, foreground wait. A raw `simctl launch` returns at 0.3s. |
+| 0.8-1.8s | Splash on screen while Hermes loads the embedded bundle and Expo Router renders the first screen. The splash only covers this; removing it would not shorten it. |
+| ~1.9s | First content frame. |
+| ~2.2s | Last change: the iOS home indicator fading (0.2% of pixels, y 861-866pt). Not the app. |
+| 2.2s (first snapshot) | The first `snapshot` after a launch blocks inside the runner (~1.4s) until the app is ready and returns the full content tree. |
+
+Consequences in the framework:
+
+- `device.launch` now waits for two consecutive identical accessibility-tree
+  signatures after the open (the first snapshot does the heavy waiting), so
+  it returns with content rendered (~2.5s) rather than at the splash (0.8s).
+- Motion detection ignores the bottom 20pt band on iOS (home indicator) and
+  takes captures back to back; `waitForAnimationToEnd` on a still screen is
+  now ~0.5s (three ~150ms captures) instead of ~1.4s.
+- Suite wall-clock is unchanged (~90s for 13 tests) because the time was the
+  app booting either way; what changed is that the framework no longer
+  reports a launch as done while the splash is up.
+- The remaining lever is agent-device's `open` (0.8s vs 0.3s for simctl,
+  about 7s per run over 14 launches) and the number of relaunches the tests
+  ask for.
