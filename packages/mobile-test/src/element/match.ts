@@ -80,6 +80,14 @@ function matches(el: ElementHandle, locator: Locator): boolean {
       return label === locator.value
     }
 
+    case 'role': {
+      const role = el.role || ''
+      if (locator.value instanceof RegExp) {
+        return locator.value.test(role)
+      }
+      return role === locator.value
+    }
+
     default:
       return false
   }

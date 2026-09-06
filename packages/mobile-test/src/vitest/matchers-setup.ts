@@ -1,9 +1,11 @@
-import { DriverClient, setDriverClient, setDevice, setTestConfig } from 'mobile-test'
-import { AndroidDevice } from '../device/android-device.js'
-import { IOSDevice } from '../device/ios-device.js'
+import { afterAll, inject } from 'vitest'
+import { setBackend } from '../backend/context.js'
+import { AgentDeviceBackend } from '../backend/agent-device.js'
+import { BackendDevice } from '../device/backend-device.js'
+import { setDevice } from '../device/index.js'
+import { setTestConfig } from '../config-context.js'
 import { registerMatchers } from '../expect/matchers.js'
 import { setLogLevel, log } from '../logger.js'
-import { afterAll, inject } from 'vitest'
 
 const runtime = inject('__mobileTestRuntime')
 const config = inject('__mobileTestConfig')
@@ -43,13 +45,15 @@ afterAll(() => {
   log.printTimingSummary()
 })
 
-const { port, deviceName, deviceUdid, platform } = runtime
-const client = new DriverClient(`http://localhost:${port}`)
-setDriverClient(client)
+const { session, deviceName, deviceUdid, platform } = runtime
 
-const device = platform === 'android'
-  ? new AndroidDevice(deviceUdid, deviceName, client)
-  : new IOSDevice(deviceUdid, deviceName, client)
-setDevice(device)
+const backend = new AgentDeviceBackend({
+  session,
+  platform,
+  device: { name: deviceName, id: deviceUdid, platform },
+})
+
+setBackend(backend)
+setDevice(new BackendDevice(backend))
 
 registerMatchers()

@@ -2,7 +2,8 @@ import type { Locator } from './by.js'
 import type { ElementHandle } from './types.js'
 import { toFrame, frameCenter, visibleFramePercentage, type Frame } from './types.js'
 import { findElement, findAllElements } from './match.js'
-import { getDriverClient, getActiveBundleId } from '../driver/context.js'
+import { getBackend } from '../backend/context.js'
+import type { Backend } from '../backend/types.js'
 import { getActionTimeout } from '../config-context.js'
 import { compareBuffers } from '../screenshot/compare.js'
 import { cropToFrame } from '../screenshot/crop.js'
@@ -34,22 +35,15 @@ export class Element {
    */
   async resolve(timeout = getActionTimeout()): Promise<ElementHandle> {
     return log.time(`resolve(${this.locator})`, async () => {
-      const client = getDriverClient()
-      const bundleId = getActiveBundleId()
+      const backend = getBackend()
       const start = Date.now()
       let polls = 0
 
       while (true) {
         polls++
-        const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+        const hierarchy = await backend.snapshot()
         log.debug(`resolve(${this.locator}) poll #${polls}`)
-        let found: ElementHandle | null
-        if (this.index !== undefined) {
-          const all = findAllElements(hierarchy, this.locator, this.index + 1)
-          found = all.length > this.index ? all[this.index] : null
-        } else {
-          found = findElement(hierarchy, this.locator)
-        }
+        const found = this.match(hierarchy)
         if (found) return found
 
         if (Date.now() - start >= timeout) {
@@ -70,9 +64,11 @@ export class Element {
    * Returns null if not found.
    */
   async tryResolve(): Promise<ElementHandle | null> {
-    const client = getDriverClient()
-    const bundleId = getActiveBundleId()
-    const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+    const hierarchy = await getBackend().snapshot()
+    return this.match(hierarchy)
+  }
+
+  private match(hierarchy: ElementHandle): ElementHandle | null {
     if (this.index !== undefined) {
       const all = findAllElements(hierarchy, this.locator, this.index + 1)
       return all.length > this.index ? all[this.index] : null
@@ -84,44 +80,41 @@ export class Element {
     return log.time(`tap(${this.locator})`, async () => {
       const el = await this.resolve()
       const center = frameCenter(toFrame(el.frame))
-      await getDriverClient().tap(center.x, center.y)
+      await getBackend().tap(center.x, center.y)
     })
   }
 
   async doubleTap(): Promise<void> {
     const el = await this.resolve()
     const center = frameCenter(toFrame(el.frame))
-    await getDriverClient().doubleTap(center.x, center.y)
+    await getBackend().tap(center.x, center.y, { doubleTap: true })
   }
 
   async type(text: string): Promise<void> {
     return log.time(`type(${this.locator})`, async () => {
-      // Tap to focus, then type — keyboard wait is handled driver-side
+      // Tap to focus, then append text.
       await this.tap()
-      await getDriverClient().typeText(text)
+      await getBackend().typeText(text)
     })
   }
 
   async replaceText(text: string): Promise<void> {
     return log.time(`replaceText(${this.locator})`, async () => {
       const el = await this.focusForTextEditing()
-      await getDriverClient().clearText(this.toClearTextRequest(el))
-      if (text.length > 0) {
-        await getDriverClient().typeText(text)
-      }
+      await getBackend().replaceText(el, text)
     })
   }
 
   async longPress(duration = 1.0): Promise<void> {
     const el = await this.resolve()
     const center = frameCenter(toFrame(el.frame))
-    await getDriverClient().tap(center.x, center.y, duration)
+    await getBackend().tap(center.x, center.y, { durationMs: Math.round(duration * 1000) })
   }
 
   async clear(): Promise<void> {
     return log.time(`clear(${this.locator})`, async () => {
       const el = await this.focusForTextEditing()
-      await getDriverClient().clearText(this.toClearTextRequest(el))
+      await getBackend().clearText(el)
     })
   }
 
@@ -146,19 +139,18 @@ export class Element {
   async scrollToEnd(direction: 'up' | 'down' | 'left' | 'right' = 'down', maxScrolls = 50): Promise<void> {
     return log.time(`scrollToEnd(${direction})`, async () => {
       const swipeDir = direction === 'down' ? 'up' : direction === 'up' ? 'down' : direction === 'right' ? 'left' : 'right'
-      const client = getDriverClient()
+      const backend = getBackend()
       let atEndStreak = 0
       const handle = await this.resolve()
       const scrollFrame = toFrame(handle.frame)
-      const { scale } = await client.deviceInfo()
 
       // Swipe once, wait for it to settle, capture as our reference
       await this.swipe(swipeDir)
-      let previous = await this.waitForSettled(client, 2_000, scrollFrame, scale)
+      let previous = await this.waitForSettled(backend, 2_000, scrollFrame)
 
       for (let i = 1; i < maxScrolls; i++) {
         await this.swipe(swipeDir)
-        const current = await this.waitForSettled(client, 2_000, scrollFrame, scale)
+        const current = await this.waitForSettled(backend, 2_000, scrollFrame)
         // Compare consecutive post-swipe settled states
         const diff = await compareBuffers(previous, current)
         log.debug(`scrollToEnd iteration ${i}: diff=${diff.toFixed(4)}%`)
@@ -166,7 +158,7 @@ export class Element {
           atEndStreak += 1
           // Require multiple low-diff swipes to avoid stopping early near the end.
           if (atEndStreak >= END_OF_SCROLL_STREAK_REQUIRED) {
-            await this.waitForSettled(client, 2_000, scrollFrame, scale)
+            await this.waitForSettled(backend, 2_000, scrollFrame)
             return
           }
         } else {
@@ -175,7 +167,7 @@ export class Element {
         previous = current
       }
 
-      await this.waitForSettled(client, 2_000, scrollFrame, scale)
+      await this.waitForSettled(backend, 2_000, scrollFrame)
     })
   }
 
@@ -184,16 +176,15 @@ export class Element {
    * Returns the final stable screenshot.
    */
   private async waitForSettled(
-    client: ReturnType<typeof getDriverClient>,
+    backend: Backend,
     timeout = 2_000,
     frame?: Frame,
-    scale?: number,
   ): Promise<Buffer> {
     const start = Date.now()
-    let previous = await this.captureForMotionDiff(client, frame, scale)
+    let previous = await this.captureForMotionDiff(backend, frame)
     while (Date.now() - start < timeout) {
       await new Promise(r => setTimeout(r, 200))
-      const current = await this.captureForMotionDiff(client, frame, scale)
+      const current = await this.captureForMotionDiff(backend, frame)
       const diff = await compareBuffers(previous, current)
       if (diff <= 0.01) return current
       previous = current
@@ -201,22 +192,18 @@ export class Element {
     return previous
   }
 
-  private async captureForMotionDiff(
-    client: ReturnType<typeof getDriverClient>,
-    frame?: Frame,
-    scale?: number,
-  ): Promise<Buffer> {
-    const screenshot = await client.screenshot()
-    if (frame && scale) {
-      return cropToFrame(screenshot, frame, scale)
+  private async captureForMotionDiff(backend: Backend, frame?: Frame): Promise<Buffer> {
+    const shot = await backend.screenshot({ fast: true })
+    if (frame) {
+      return cropToFrame(shot.png, frame, shot.scale)
     }
-    return screenshot
+    return shot.png
   }
 
   async swipe(direction: 'up' | 'down' | 'left' | 'right', _distance = 200): Promise<void> {
     const el = await this.resolve()
     const frame = toFrame(el.frame)
-    const viewport = await this.getViewport()
+    const viewport = await getBackend().viewport()
     const gestureFrame = this.getGestureFrame(frame, viewport)
     const centerX = gestureFrame.x + gestureFrame.width * 0.5
     const centerY = gestureFrame.y + gestureFrame.height * 0.5
@@ -228,19 +215,14 @@ export class Element {
     const rightX = gestureFrame.x + gestureFrame.width * 0.85
 
     const points = {
-      up: { startX: centerX, startY: bottomY, endX: centerX, endY: topY },
-      down: { startX: centerX, startY: topY, endX: centerX, endY: bottomY },
-      left: { startX: rightX, startY: centerY, endX: leftX, endY: centerY },
-      right: { startX: leftX, startY: centerY, endX: rightX, endY: centerY },
+      up: { from: { x: centerX, y: bottomY }, to: { x: centerX, y: topY } },
+      down: { from: { x: centerX, y: topY }, to: { x: centerX, y: bottomY } },
+      left: { from: { x: rightX, y: centerY }, to: { x: leftX, y: centerY } },
+      right: { from: { x: leftX, y: centerY }, to: { x: rightX, y: centerY } },
     }
 
     const gesture = points[direction]
-    await getDriverClient().swipe(
-      gesture.startX,
-      gesture.startY,
-      gesture.endX,
-      gesture.endY,
-    )
+    await getBackend().swipe(gesture.from, gesture.to)
   }
 
   private async focusForTextEditing(): Promise<ElementHandle> {
@@ -248,37 +230,18 @@ export class Element {
     if (el.hasFocus) return el
 
     const center = frameCenter(toFrame(el.frame))
-    await getDriverClient().tap(center.x, center.y)
+    await getBackend().tap(center.x, center.y)
     await new Promise(r => setTimeout(r, 300))
     return el
-  }
-
-  private toClearTextRequest(el: ElementHandle): {
-    bundleId?: string
-    identifier?: string
-    x: number
-    y: number
-    width: number
-    height: number
-  } {
-    const frame = toFrame(el.frame)
-
-    return {
-      bundleId: getActiveBundleId() ?? undefined,
-      identifier: el.identifier || undefined,
-      x: frame.x,
-      y: frame.y,
-      width: frame.width,
-      height: frame.height,
-    }
   }
 
   async isVisible(): Promise<boolean> {
     const handles = await this.tryResolveAll()
     if (handles.length === 0) return false
 
-    const viewport = await this.getViewport()
+    const viewport = await getBackend().viewport()
     for (const handle of handles) {
+      if (handle.visibleToUser === false) continue
       const percentage = visibleFramePercentage(toFrame(handle.frame), viewport)
       if (percentage >= MIN_VISIBLE_PERCENTAGE) {
         return true
@@ -297,31 +260,8 @@ export class Element {
   }
 
   private async tryResolveAll(): Promise<ElementHandle[]> {
-    const client = getDriverClient()
-    const bundleId = getActiveBundleId()
-    const hierarchy = await client.viewHierarchy(bundleId ?? undefined)
+    const hierarchy = await getBackend().snapshot()
     return findAllElements(hierarchy, this.locator)
-  }
-
-  private async getViewport(): Promise<Frame> {
-    const client = getDriverClient()
-    const bundleId = getActiveBundleId()
-
-    if (bundleId) {
-      const hierarchy = await client.viewHierarchy(bundleId)
-      const frame = toFrame(hierarchy.frame)
-      if (frame.width > 0 && frame.height > 0) {
-        return frame
-      }
-    }
-
-    const info = await client.deviceInfo()
-    return {
-      x: 0,
-      y: 0,
-      width: info.widthPoints,
-      height: info.heightPoints,
-    }
   }
 
   private getGestureFrame(frame: Frame, viewport: Frame): Frame {

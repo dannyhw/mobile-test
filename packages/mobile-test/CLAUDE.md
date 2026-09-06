@@ -18,7 +18,8 @@ Key references:
 
 - `bun run build` (or `npx tsup`) — build to dist/
 - `bun run test` — unit tests
-- From example-app: `bun run test:e2e` — e2e tests against a booted simulator
+- From example-app: `bun run test:e2e` — e2e tests against a booted simulator (`test:e2e:android` for a booted emulator)
+- The example app must be installed on the target (e.g. `bun expo run:ios --configuration Release --device "iPhone 17"`); Release embeds the JS bundle so Metro is not needed
 - **Important**: run builds when changes affect dist/runtime behavior or tests that consume built output; docs-only changes do not require a build
 - For example-app e2e runs, rebuild `mobile-test` first when the change impacts `dist/` artifacts
 
@@ -40,6 +41,7 @@ Useful commands:
 
 - TypeScript, ESM, Node.js 18+
 - Use `bun` as the package manager
-- `execa` for shell commands, `odiff-bin` for screenshots, `vitest` as peer dep
-- HTTP/JSON protocol between TS client and Swift driver
+- `agent-device` drives simulators/emulators (no native code in this repo); `execa` only for `simctl status_bar` and adb key events
+- `odiff-bin` for screenshots, `vitest` as peer dep
+- Keep agent-device types behind `src/backend/types.ts`; the rest of the framework only sees `Backend`
 - Minimal dependencies

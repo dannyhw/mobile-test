@@ -21,28 +21,32 @@ Every existing tool makes a fundamental tradeoff:
 
 ---
 
-## Key Architectural Insight: The Driver App Pattern
+## Key Architectural Decision: agent-device as the device backend
 
-The single most important finding is how Maestro achieves zero-config:
+The framework does not ship native code. All device interaction goes through
+[agent-device](https://github.com/callstack/agent-device)'s typed Node client
+(`createAgentDeviceClient`), which installs and maintains its own XCTest runner
+on iOS and an accessibility snapshot helper on Android. That keeps the
+zero-config model (no custom app build, no app code changes beyond test IDs)
+without owning Swift or Kotlin.
 
-**It installs its own driver app onto the device at runtime.** The driver app uses OS-level accessibility APIs to interact with ANY app — no custom builds, no SDK injection, no app code changes needed.
+This replaced an earlier in-house design (a Swift XCTest driver and a Kotlin
+UIAutomator driver talking HTTP/JSON to the TypeScript client). Both worked,
+but maintaining two native drivers was the bulk of the project's surface area.
+The POC that made the switch, with measurements, is in
+[plan/poc-agent-device-backend.md](./plan/poc-agent-device-backend.md) and
+[research/agent-device-programmatic-api.md](./research/agent-device-programmatic-api.md).
 
-- **iOS**: A pre-built XCTest runner bundle is installed on the simulator. It starts an HTTP server and uses XCUITest accessibility APIs + private Apple APIs for touch synthesis.
-- **Android**: Two APKs (a driver service + instrumentation test) are installed via ADB. The service uses UIAutomator (`UiDevice`/`UiAutomation`) and exposes a gRPC server.
+### What we keep from the original design
+- Auto-detection of the booted simulator/emulator, no config required
+- Accessibility-tree element resolution with TypeScript-side locator matching
+- Native screenshots compared with odiff, with baselines, masks and crops
+- Vitest as the runner; Playwright-style auto-retrying assertions
 
-**This is the approach we must adopt**, but simplified:
-
-### What we keep from Maestro
-- Pre-built driver apps installed at runtime (the zero-config magic)
-- XCUITest accessibility APIs for iOS
-- UIAutomator for Android
-- Screenshots via native APIs (`XCUIScreen.main.screenshot()` on iOS, `UiAutomation.takeScreenshot()` on Android)
-
-### What we fix from Maestro
-- **Unified protocol**: HTTP/JSON for both platforms (Maestro uses HTTP for iOS, gRPC for Android — unnecessary split)
-- **Fewer layers**: Maestro's iOS has 4 layers of abstraction. We need 2: TS client -> native driver
-- **TypeScript all the way**: Host-side code is TS, not Kotlin/JVM
-- **Proper screenshot comparison**: Built-in baseline management, approval workflow, region masking
+### What agent-device gives us
+- The iOS runner and Android helper, built and cached by agent-device
+- Sessions and device claims, so parallel projects do not fight over devices
+- Physical devices, tvOS, device clouds and remote proxies without extra work
 
 ---
 
@@ -53,10 +57,8 @@ The single most important finding is how Maestro achieves zero-config:
 │  User Test Code (TypeScript)                     │
 │  describe('Login', () => {                       │
 │    it('shows welcome screen', async () => {      │
-│      await device.launch({                       │
-│        path: '/welcome'                          │
-│      })                                          │
-│      await expect(screen).toMatchScreenshot()    │
+│      await device.launch({ path: '/welcome' })   │
+│      await expect(device).toMatchScreenshot()    │
 │    })                                            │
 │  })                                              │
 └────────────────┬────────────────────────────────┘
@@ -65,25 +67,15 @@ The single most important finding is how Maestro achieves zero-config:
 │  Test Framework Core (TypeScript/Node.js)        │
 │  - Vitest as test runner                         │
 │  - Device/element/expect APIs                    │
-│  - Screenshot comparison (odiff)            │
+│  - Screenshot comparison (odiff)                 │
 │  - Auto-waiting logic                            │
-│  - Device lifecycle management                   │
 └────────────────┬────────────────────────────────┘
-                 │ HTTP/JSON
+                 │ Backend interface (points, frames, ElementHandle)
 ┌────────────────▼────────────────────────────────┐
-│  Driver App (runs on simulator/emulator)         │
-│                                                  │
-│  iOS: Swift XCTest runner bundle                 │
-│  - HTTP server (lightweight, e.g. Swifter/Vapor) │
-│  - XCUITest accessibility APIs for element tree  │
-│  - Private XCTest APIs for touch synthesis       │
-│  - XCUIScreen for screenshots                    │
-│                                                  │
-│  Android: Kotlin UIAutomator service             │
-│  - HTTP server (e.g. NanoHTTPD)                  │
-│  - UIAutomator for element tree + interactions   │
-│  - UiAutomation for screenshots                  │
-│  - Installed via ADB at runtime                  │
+│  AgentDeviceBackend (TypeScript)                 │
+│  createAgentDeviceClient() → agent-device daemon │
+│    iOS: XCTest runner (agent-device's)           │
+│    Android: adb + snapshot helper (agent-device's)│
 └─────────────────────────────────────────────────┘
 ```
 
@@ -270,32 +262,28 @@ Key commands:
 - `adb shell am start -n com.example.app/.MainActivity` — launch on Android
 - `adb shell am start -a android.intent.action.VIEW -d myapp://deep-link` — launch via deep link on Android
 
-### 2. Driver Apps (Swift / Kotlin)
+### 2. Device Backend (agent-device)
 
-Pre-built binaries shipped with the npm package. Installed onto the device at test start.
+`src/backend/agent-device.ts` implements the `Backend` interface over
+agent-device's client:
 
-**iOS Driver (Swift)**:
-- XCTest UI test runner bundle (like Maestro's approach)
-- Starts lightweight HTTP server on a known port (e.g., localhost:8100)
-- Endpoints: `POST /tap`, `POST /type`, `GET /screenshot`, `GET /tree`, etc.
-- Uses `XCUIApplication(bundleIdentifier:)` to attach to any running app
-- Uses `XCUIElement.snapshot` for view hierarchy
-- Uses XCTest touch synthesis for interactions
-- Uses `XCUIScreen.main.screenshot()` for screenshots
+- `snapshot()` → `capture.snapshot({ raw: true, forceFull: true })`, rebuilt into
+  an `ElementHandle` tree (`src/backend/snapshot-tree.ts`)
+- `screenshot()` → `capture.screenshot({ pixelDensity: 3 })` on iOS simulators,
+  native pixels on Android
+- `tap`/`swipe`/`typeText`/`replaceText` → `press`, `pan`, `type`, `fill`
+- `launchApp` → `apps.open({ app, url, relaunch: true })`
+- Clear text: delete key per character (`"\b"` through XCTest on iOS, adb
+  `KEYCODE_DEL` on Android), since agent-device has no clear command
 
-**Android Driver (Kotlin)**:
-- UIAutomator instrumentation test APK (like Maestro's approach)
-- Starts HTTP server (NanoHTTPD) on a known port
-- Same REST endpoints as iOS for unified interface
-- Uses `UiDevice` for interactions and hierarchy
-- Uses `UiAutomation.takeScreenshot()` for screenshots
-- Port-forwarded via `adb forward tcp:8100 tcp:8100`
+Vitest `globalSetup` picks the device with `devices.list`, opens one session
+per Vitest project, and workers attach to that session by name.
 
 ### 3. Screenshot Comparison (TypeScript)
 
 Built-in, first-class, not an afterthought:
 
-- **Capture**: Native screenshots via driver apps (full device resolution)
+- **Capture**: Native screenshots via agent-device (device pixels; iOS simulators at the device scale)
 - **Normalize**: `xcrun simctl status_bar` to fix time/battery (from Owl)
 - **Compare**: [odiff](https://github.com/dmtrKovalenko/odiff) — SIMD-optimized native image comparison, ~6x faster than odiff. Written in Zig with SSE2/AVX2/NEON support. Key advantages:
   - Built-in `ignoreRegions` option (no manual masking needed)
@@ -313,7 +301,7 @@ Built-in, first-class, not an afterthought:
 **Use Vitest directly** — don't build a custom runner:
 
 - Custom Vitest reporter for mobile-specific output
-- `globalSetup` to boot devices and install driver apps
+- `globalSetup` to select the device and open the agent-device session
 - `beforeAll`/`afterAll` hooks for app lifecycle
 - Custom matchers via `expect.extend()` for `toMatchScreenshot()`, `toBeVisible()`, etc.
 
@@ -326,10 +314,10 @@ Built-in, first-class, not an afterthought:
 - Built-in screenshot comparison with proper workflow
 - Extensible — users can write helpers, abstractions, shared utilities
 - Runs in Vitest — familiar to every TS/JS developer
-- Same zero-config device interaction (driver app pattern)
+- Same zero-config device interaction (agent-device installs its own runner)
 
 ### vs Detox
-- No custom builds required — driver app pattern instead of in-process injection
+- No custom builds required — accessibility-driven runner instead of in-process injection
 - Much simpler setup — no `detox build` step, no native config changes
 - No WebSocket complexity — simple HTTP from TS to driver
 - Built-in screenshot testing
@@ -353,19 +341,23 @@ Built-in, first-class, not an afterthought:
 
 ## Open Questions / Risks
 
-1. **iOS driver distribution**: Shipping a pre-built XCTest runner in an npm package means it must be signed or the simulator must allow unsigned test runners. Maestro solves this — need to study how.
+1. **agent-device is a moving dependency.** Pinned to an exact version; agent-device
+   types never cross the `Backend` seam, so upgrades stay internal.
 
-2. **Private Apple APIs**: Maestro uses `_XCT_synthesizeEvent` for touch synthesis. These are undocumented and could break with Xcode updates. Alternative: use `XCUIElement.tap()` through the accessibility tree, which is public API but requires finding elements first.
+2. **Android empty text fields.** agent-device's Android snapshot reports the hint
+   text as the value of an empty `EditText` and exposes no hint flag, so
+   `toHaveValue("")` cannot pass on Android until that is added upstream.
 
-3. **Driver startup time**: Installing and launching the driver app adds overhead. Maestro takes 10-120s for cold start. We should keep the driver running between tests and only restart when needed.
+3. **Per-call latency.** Observation through the daemon is 2-3x slower than the
+   old raw HTTP driver (snapshot ~200ms vs ~60ms), while launches, typing and
+   clearing are 3-4x faster. The example suite is ~25% faster overall.
 
-4. **Synchronization without in-process access**: Detox's main advantage is knowing when the app is idle (animations done, network settled). Without in-process injection, we must rely on:
-   - Element visibility polling (like Playwright's auto-wait)
-   - Configurable timeouts
-   - Optional explicit waits
-   - This is a reasonable trade-off for zero-config.
+4. **Synchronization without in-process access**: as before, we rely on element
+   polling and screenshot-diff animation waits; agent-device's `wait stable`
+   rarely settles on React Native screens.
 
-5. **Android driver signing**: UIAutomator APKs need to be signed. We can use debug signing which works on emulators without configuration.
+5. **Baselines are backend-specific.** agent-device's iOS capture includes the
+   Dynamic Island cutout; switching capture paths requires regenerating baselines.
 
 ---
 
@@ -373,8 +365,10 @@ Built-in, first-class, not an afterthought:
 
 Detailed plans for each phase live in [`plan/`](./plan/).
 
+> **agent-device POC (done):** the in-house Swift/Kotlin drivers were replaced by agent-device's Node client while keeping the TS API and Vitest runner. See [plan/poc-agent-device-backend.md](./plan/poc-agent-device-backend.md).
+
 1. **Phase 1 — iOS Simulator MVP** ✅ [plan](./plan/phase-1-ios-mvp.md)
-   - Swift XCTest driver with HTTP server (tap, type, screenshot, element tree)
+   - Swift XCTest driver with HTTP server (tap, type, screenshot, element tree) — since replaced by agent-device
    - TypeScript client that talks to driver over HTTP
    - Basic device management via `xcrun simctl`
    - Screenshot capture and odiff comparison
@@ -388,8 +382,8 @@ Detailed plans for each phase live in [`plan/`](./plan/).
    - Additional actions (`doubleTap()`, `replaceText()`, `scrollTo()`)
    - Additional assertions (`toBeEnabled()`, `toHaveAttribute()`)
 
-3. **Phase 3 — Android Support** [plan](./plan/phase-3-android.md)
-   - Kotlin UIAutomator driver with HTTP server (same API as iOS)
+3. **Phase 3 — Android Support** ✅ [plan](./plan/phase-3-android.md)
+   - Kotlin UIAutomator driver with HTTP server (same API as iOS) — since replaced by agent-device
    - ADB-based device management
    - Port forwarding setup
    - Cross-platform test running

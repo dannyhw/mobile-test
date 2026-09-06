@@ -1,4 +1,0 @@
-<resources>
-    <style name="Theme.MobileTestDriver" parent="android:Theme.Material.Light.NoActionBar" />
-</resources>
-

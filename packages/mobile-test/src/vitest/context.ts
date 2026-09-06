@@ -13,7 +13,8 @@ export interface MobileTestProvidedConfig {
 }
 
 export interface MobileTestRuntimeContext {
-  port: number
+  /** agent-device session name shared by globalSetup and the workers. */
+  session: string
   deviceName: string
   deviceUdid: string
   platform: 'ios' | 'android'

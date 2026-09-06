@@ -1,4 +1,4 @@
-export type LocatorType = 'id' | 'text' | 'type' | 'label'
+export type LocatorType = 'id' | 'text' | 'type' | 'label' | 'role'
 
 export class Locator {
   public ancestorLocator?: Locator
@@ -38,5 +38,13 @@ export const by = {
 
   label(label: string | RegExp): Locator {
     return new Locator('label', label)
+  },
+
+  /**
+   * Match by semantic role, e.g. "button", "textfield", "scrollview".
+   * Roles are backend-provided strings; compare with `agent-device snapshot`.
+   */
+  role(role: string | RegExp): Locator {
+    return new Locator('role', role)
   },
 }
