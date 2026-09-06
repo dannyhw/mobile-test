@@ -1,6 +1,6 @@
 {
   "name": "mobile-test",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "TypeScript-first mobile testing framework focused on screenshot testing",
   "repository": {
